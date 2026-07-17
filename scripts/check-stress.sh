@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+count="${STRESS_COUNT:-25}"
+pattern='^(TestContentionElectsExactlyOneOwner|TestAcquirePropagatesBackendAndCancellation|TestHandleLifecycleFailsClosed|TestHandleRejectsConcurrentOperationsWithoutBlockingState|TestHandleFailsClosedWhenDeadlinePassesDuringOperation|TestManagedRenewalReportsUncertaintyAndStopsAdmission|TestManagedStopHonorsCallerDeadline|TestStaleOwnerCannotAffectSuccessor|TestAcquireRacingShutdownReleasesReservation|TestManagerBoundsHandlesAndReleasesOnShutdown|TestWorkerCancelsOwnershipSensitiveJobOnLoss|TestCoordinatorCancelsOwnershipSensitiveTaskOnLoss)$'
+
+go test -race -shuffle=on -count="$count" -run "$pattern" ./...

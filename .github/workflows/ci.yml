@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: 1.26.5
+          cache: false
+      - run: go mod tidy -diff
+      - run: make check
+      - run: make staticcheck
+      - run: make mutation
+      - run: make vuln
+      - run: make workflows
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: 1.26.5
+          cache: false
+      - uses: golangci/golangci-lint-action@d583c34f0599d37dbac4a198b9c83201be380893
+        with:
+          version: v2.12.2
+          args: --timeout=5m
+
+  nilaway:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: 1.26.5
+          cache: false
+      - run: make nilaway
+
+  postgres:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        postgres: [14, 15, 16, 17, 18]
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lease
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d lease"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      POSTGRES_URL: postgres://postgres:postgres@127.0.0.1:5432/lease?sslmode=disable
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: 1.26.5
+          cache: false
+      - run: go test -race -count=1 -timeout=15m ./postgres
+
+  valkey:
+    runs-on: ubuntu-latest
+    services:
+      valkey:
+        image: valkey/valkey:9.0-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      VALKEY_ADDRESS: 127.0.0.1:6379
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: 1.26.5
+          cache: false
+      - run: go test -race -count=1 -timeout=15m ./valkey
+
+  backend-faults:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
+        with:
+          go-version: 1.26.5
+          cache: false
+      - run: make backend-hardening
