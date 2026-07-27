@@ -37,6 +37,8 @@
 
 ### Fixed
 
+- Validate the binary API export baseline with the canonical `apidiff` gate
+  instead of interpreting it as a text symbol list.
 - Pin internal golib dependencies to immutable source revisions so clean
   consumers do not depend on rewritten or missing module tags.
 - Bound acquisition waits independently from injectable clock anomalies.
