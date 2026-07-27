@@ -3,9 +3,9 @@ module github.com/faustbrian/golib/pkg/lease
 go 1.26.5
 
 require (
-	github.com/faustbrian/golib/pkg/migrations v0.1.0
-	github.com/faustbrian/golib/pkg/queue v0.1.0
-	github.com/faustbrian/golib/pkg/service v0.1.0
+	github.com/faustbrian/golib/pkg/migrations v0.0.0-20260726014151-129e137b63d8
+	github.com/faustbrian/golib/pkg/queue v0.0.0-20260726014151-129e137b63d8
+	github.com/faustbrian/golib/pkg/service v0.0.0-20260726014151-129e137b63d8
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/valkey-io/valkey-go v1.0.76
 	github.com/valkey-io/valkey-go/mock v1.0.76
@@ -20,9 +20,3 @@ require (
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 )
-
-replace github.com/faustbrian/golib/pkg/migrations => github.com/faustbrian/golib/pkg/migrations v0.0.0-20260726014151-129e137b63d8
-
-replace github.com/faustbrian/golib/pkg/queue => github.com/faustbrian/golib/pkg/queue v0.0.0-20260726014151-129e137b63d8
-
-replace github.com/faustbrian/golib/pkg/service => github.com/faustbrian/golib/pkg/service v0.0.0-20260726014151-129e137b63d8
