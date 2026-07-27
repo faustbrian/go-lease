@@ -12,6 +12,8 @@
 
 - Opaque Valkey ownership guards for atomic protected cache publication without
   exposing logical lease identities.
+- Handle ownership snapshots for composing bounded client acquisition with
+  protected adapters without reconstructing lease records.
 - Fenced lease model with bounded acquisition and managed renewal.
 - Deterministic memory reference backend.
 - Native Valkey 9 backend with atomic server-time scripts.
@@ -35,6 +37,8 @@
 
 ### Fixed
 
+- Pin internal golib dependencies to immutable source revisions so clean
+  consumers do not depend on rewritten or missing module tags.
 - Bound acquisition waits independently from injectable clock anomalies.
 - Prevent observer re-entrancy from deadlocking handle state transitions.
 - Reject corrupt or incompatible successful responses that change ownership.

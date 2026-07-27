@@ -104,6 +104,15 @@ func (handle *Handle) Token() Token {
 	return handle.record.Token
 }
 
+// Snapshot returns the latest backend-authenticated ownership record. It is
+// intended for composing protected adapters such as Valkey ownership guards;
+// callers must use State or Validate for local admission decisions.
+func (handle *Handle) Snapshot() Record {
+	handle.mu.Lock()
+	defer handle.mu.Unlock()
+	return handle.record
+}
+
 // AcquiredAt returns the backend-anchored acquisition instant.
 func (handle *Handle) AcquiredAt() time.Time {
 	handle.mu.Lock()

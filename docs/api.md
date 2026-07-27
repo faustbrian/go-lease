@@ -9,9 +9,11 @@ concurrent waiters and managed renewers.
 
 `Client.TryAcquire` performs one backend attempt. `Client.Acquire` retries only
 contention and stops at both the wait and attempt bounds. `Handle` exposes
-`Owner`, `Token`, `AcquiredAt`, `Deadline`, `State`, `Renew`, `Validate`,
-`Release`, and `StartManaged`. `AcquiredAt` is backend-clock inspection data;
-`Deadline` is the conservative local admission bound and is safe across
+`Owner`, `Token`, `Snapshot`, `AcquiredAt`, `Deadline`, `State`, `Renew`,
+`Validate`, `Release`, and `StartManaged`. `Snapshot` returns the latest
+backend-authenticated record for protected-adapter composition; admission
+still uses `State` or `Validate`. `AcquiredAt` is backend-clock inspection
+data; `Deadline` is the conservative local admission bound and is safe across
 backend/client clock skew.
 
 Stable errors are `ErrContended`, `ErrTimeout`, `ErrCanceled`, `ErrLost`,

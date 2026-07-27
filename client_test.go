@@ -111,9 +111,20 @@ func TestHandleLifecycleFailsClosed(t *testing.T) {
 	if handle.Owner() != "owner-a" || handle.Token() != 1 || handle.State() != lease.StateActive {
 		t.Fatalf("unexpected handle: owner=%q token=%d state=%s", handle.Owner(), handle.Token(), handle.State())
 	}
+	snapshot := handle.Snapshot()
+	if snapshot.Key.String() != key.String() ||
+		snapshot.Owner != handle.Owner() ||
+		snapshot.Token != handle.Token() {
+		t.Fatalf("Snapshot() = %#v", snapshot)
+	}
 	clock.Advance(500 * time.Millisecond)
 	if err := handle.Renew(context.Background()); err != nil {
 		t.Fatalf("Renew() error = %v", err)
+	}
+	if renewed := handle.Snapshot(); !renewed.ExpiresAt.After(
+		snapshot.ExpiresAt,
+	) {
+		t.Fatalf("renewed Snapshot() = %#v", renewed)
 	}
 	if err := handle.Validate(context.Background()); err != nil {
 		t.Fatalf("Validate() error = %v", err)

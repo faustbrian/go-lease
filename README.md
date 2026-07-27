@@ -8,7 +8,8 @@ for native Valkey and PostgreSQL backends.
 A lease does not stop expired work. Pass `Handle.Token()` into every protected
 write and reject tokens lower than the resource's last accepted fence.
 For reconstructible Valkey cache refreshes, `valkey.Store.Guard` exposes opaque
-coordinates that `pkg/cache` can compare atomically with publication.
+coordinates from `Handle.Snapshot()` that `pkg/cache` can compare atomically
+with publication.
 
 ## Five-minute start
 
