@@ -4,6 +4,8 @@
 
 ### Changed
 
+- Remove unused CLI-related indirect dependencies from canonical module
+  metadata.
 - Refresh owned-module checksums against the final consolidated archives.
 - Normalized standalone module metadata against the canonical owned dependency
   graph, including complete checksums for clean consumer resolution.
