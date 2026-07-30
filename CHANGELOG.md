@@ -6,6 +6,8 @@
 
 - Remove unused CLI-related indirect dependencies from canonical module
   metadata.
+- Pin owned sibling modules to exact resolvable main pseudo-versions so
+  standalone and clean external consumers use immutable dependency content.
 - Refresh owned-module checksums against the final consolidated archives.
 - Normalized standalone module metadata against the canonical owned dependency
   graph, including complete checksums for clean consumer resolution.
