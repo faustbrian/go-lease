@@ -264,7 +264,11 @@ func TestClientBoundsWaitersAndBackendOperationTime(t *testing.T) {
 		_, err := client.Acquire(context.Background(), key, policy)
 		first <- err
 	}()
-	<-backend.entered
+	select {
+	case <-backend.entered:
+	case err := <-first:
+		t.Fatalf("first Acquire() returned before backend entry: %v", err)
+	}
 	if _, err := client.Acquire(context.Background(), key, policy); !errors.Is(err, lease.ErrBackendUnavailable) {
 		t.Fatalf("Acquire(over waiter capacity) error = %v", err)
 	}

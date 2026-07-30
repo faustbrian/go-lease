@@ -58,14 +58,18 @@ func NewPolicy(options PolicyOptions) (Policy, error) {
 	if options.FailureBehavior == 0 {
 		options.FailureBehavior = FailureFailClosed
 	}
-	if options.TTL <= 0 || options.TTL > MaxTTL ||
+	remainingTTL := options.TTL - options.SafetyMargin
+	invalidRenewal := options.RenewEvery < 0
+	if options.RenewEvery != 0 {
+		invalidRenewal = invalidRenewal || options.RenewEvery >= remainingTTL
+	}
+	if options.TTL < time.Nanosecond || options.TTL > MaxTTL ||
 		options.Wait < 0 || options.Wait > MaxWait || options.Retry < 0 || options.Retry > MaxWait ||
 		options.Jitter < 0 || options.SafetyMargin < 0 ||
-		options.SafetyMargin >= options.TTL || options.Jitter > options.Retry ||
-		options.RenewEvery < 0 ||
-		(options.RenewEvery > 0 && options.RenewEvery >= options.TTL-options.SafetyMargin) ||
+		remainingTTL < time.Nanosecond || options.Jitter > options.Retry ||
+		invalidRenewal ||
 		options.MaxAttempts == 0 || options.MaxAttempts > MaxAttempts ||
-		options.OperationTimeout <= 0 || options.OperationTimeout > MaxOperationTimeout ||
+		options.OperationTimeout < time.Nanosecond || options.OperationTimeout > MaxOperationTimeout ||
 		options.FailureBehavior != FailureFailClosed ||
 		(options.Wait > 0 && options.Retry == 0) {
 		return Policy{}, fmt.Errorf("%w: invalid policy", ErrInvalidState)

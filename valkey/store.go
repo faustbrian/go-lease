@@ -50,8 +50,16 @@ func (guard Guard) Owner() string { return guard.owner }
 func (guard Guard) Token() string { return guard.token }
 
 func newStore(executor executor, prefix string) (*Store, error) {
-	if executor == nil || prefix == "" || len(prefix) > 64 ||
-		strings.ContainsAny(prefix, "{}\x00\r\n ") {
+	if executor == nil {
+		return nil, lease.Wrap(lease.ErrInvalidState, "valkey options")
+	}
+	if prefix == "" {
+		return nil, lease.Wrap(lease.ErrInvalidState, "valkey options")
+	}
+	if len(prefix) > 64 {
+		return nil, lease.Wrap(lease.ErrInvalidState, "valkey options")
+	}
+	if strings.ContainsAny(prefix, "{}\x00\r\n ") {
 		return nil, lease.Wrap(lease.ErrInvalidState, "valkey options")
 	}
 	return &Store{executor: executor, prefix: prefix}, nil
@@ -60,10 +68,16 @@ func newStore(executor executor, prefix string) (*Store, error) {
 // Guard derives the backend coordinates required to validate owned atomically.
 // The protected writer must use the same Valkey deployment as this Store.
 func (store *Store) Guard(owned lease.Record) (Guard, error) {
-	if owned.Key.String() == "" ||
-		owned.Owner == "" ||
-		len(owned.Owner) > 128 ||
-		owned.Token == 0 {
+	if owned.Key.String() == "" {
+		return Guard{}, lease.Wrap(lease.ErrInvalidState, "valkey guard")
+	}
+	if owned.Owner == "" {
+		return Guard{}, lease.Wrap(lease.ErrInvalidState, "valkey guard")
+	}
+	if len(owned.Owner) > 128 {
+		return Guard{}, lease.Wrap(lease.ErrInvalidState, "valkey guard")
+	}
+	if owned.Token == 0 {
 		return Guard{}, lease.Wrap(lease.ErrInvalidState, "valkey guard")
 	}
 	return Guard{
@@ -172,11 +186,14 @@ func (store *Store) keys(key lease.Key) []string {
 
 func hashTag(key string) string {
 	start := strings.IndexByte(key, '{')
-	end := strings.IndexByte(key, '}')
-	if start < 0 || end <= start {
+	if start == -1 {
 		return ""
 	}
-	return key[start+1 : end]
+	end := strings.IndexByte(key[start+1:], '}')
+	if end == -1 {
+		return ""
+	}
+	return key[start+1 : start+1+end]
 }
 
 func parseRecord(key lease.Key, owner string, reply []string, expected error) (lease.Record, error) {
@@ -189,7 +206,19 @@ func parseRecord(key lease.Key, owner string, reply []string, expected error) (l
 	token, tokenErr := strconv.ParseUint(reply[1], 10, 64)
 	acquired, acquiredErr := strconv.ParseInt(reply[2], 10, 64)
 	expires, expiresErr := strconv.ParseInt(reply[3], 10, 64)
-	if tokenErr != nil || acquiredErr != nil || expiresErr != nil || token == 0 || expires <= acquired {
+	if tokenErr != nil {
+		return lease.Record{}, lease.Wrap(lease.ErrBackendUnavailable, "valkey response")
+	}
+	if acquiredErr != nil {
+		return lease.Record{}, lease.Wrap(lease.ErrBackendUnavailable, "valkey response")
+	}
+	if expiresErr != nil {
+		return lease.Record{}, lease.Wrap(lease.ErrBackendUnavailable, "valkey response")
+	}
+	if token == 0 {
+		return lease.Record{}, lease.Wrap(lease.ErrBackendUnavailable, "valkey response")
+	}
+	if expires <= acquired {
 		return lease.Record{}, lease.Wrap(lease.ErrBackendUnavailable, "valkey response")
 	}
 	return lease.Record{
@@ -203,8 +232,19 @@ func validate(ctx context.Context, key lease.Key, owner string, token lease.Toke
 	if err := ctx.Err(); err != nil {
 		return lease.Wrap(lease.ErrCanceled, "valkey context")
 	}
-	if key.String() == "" || owner == "" || len(owner) > 128 || token == 0 ||
-		ttl <= 0 || ttl.Milliseconds() <= 0 {
+	if key.String() == "" {
+		return lease.Wrap(lease.ErrInvalidState, "valkey input")
+	}
+	if owner == "" {
+		return lease.Wrap(lease.ErrInvalidState, "valkey input")
+	}
+	if len(owner) > 128 {
+		return lease.Wrap(lease.ErrInvalidState, "valkey input")
+	}
+	if token == 0 {
+		return lease.Wrap(lease.ErrInvalidState, "valkey input")
+	}
+	if ttl < time.Millisecond {
 		return lease.Wrap(lease.ErrInvalidState, "valkey input")
 	}
 	return nil

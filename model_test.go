@@ -32,6 +32,10 @@ func TestKeyIsBoundedAndNamespaced(t *testing.T) {
 	if _, err := lease.NewKey("queue", strings.Repeat("x", lease.MaxKeyBytes)); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("oversized key error = %v", err)
 	}
+	maximumName := strings.Repeat("x", lease.MaxKeyBytes-len("q/"))
+	if _, err := lease.NewKey("q", maximumName); err != nil {
+		t.Fatalf("maximum key error = %v", err)
+	}
 }
 
 func TestPolicyIsValidatedAndImmutable(t *testing.T) {
@@ -74,6 +78,31 @@ func TestPolicyIsValidatedAndImmutable(t *testing.T) {
 	for _, options := range invalid {
 		if _, err := lease.NewPolicy(options); !errors.Is(err, lease.ErrInvalidState) {
 			t.Fatalf("NewPolicy(%+v) error = %v", options, err)
+		}
+	}
+
+	validBoundaries := []lease.PolicyOptions{
+		{TTL: time.Nanosecond, OperationTimeout: time.Nanosecond, MaxAttempts: 1},
+		{TTL: lease.MaxTTL, MaxAttempts: 1},
+		{TTL: time.Second, Wait: lease.MaxWait, Retry: time.Nanosecond, MaxAttempts: 1},
+		{TTL: time.Second, Retry: lease.MaxWait, MaxAttempts: 1},
+		{TTL: time.Second, RenewEvery: time.Second - time.Nanosecond, MaxAttempts: 1},
+		{TTL: time.Second, MaxAttempts: lease.MaxAttempts},
+		{TTL: time.Second, OperationTimeout: lease.MaxOperationTimeout, MaxAttempts: 1},
+	}
+	for _, options := range validBoundaries {
+		if _, err := lease.NewPolicy(options); err != nil {
+			t.Fatalf("NewPolicy(valid boundary %+v) error = %v", options, err)
+		}
+	}
+
+	isolatedInvalidBoundaries := []lease.PolicyOptions{
+		{TTL: 0, OperationTimeout: time.Nanosecond, MaxAttempts: 1},
+		{TTL: time.Second, SafetyMargin: time.Second, OperationTimeout: time.Nanosecond, MaxAttempts: 1},
+	}
+	for _, options := range isolatedInvalidBoundaries {
+		if _, err := lease.NewPolicy(options); !errors.Is(err, lease.ErrInvalidState) {
+			t.Fatalf("NewPolicy(invalid boundary %+v) error = %v", options, err)
 		}
 	}
 }

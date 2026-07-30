@@ -214,7 +214,7 @@ func (source randomOwners) NewOwner() (string, error) {
 type randomRetry struct{ reader io.Reader }
 
 func (source randomRetry) Jitter(maximum time.Duration) time.Duration {
-	if maximum <= 0 {
+	if maximum < time.Nanosecond {
 		return 0
 	}
 	var bytes [8]byte
@@ -226,12 +226,5 @@ func (source randomRetry) Jitter(maximum time.Duration) time.Duration {
 }
 
 func boundedJitter(source RetrySource, maximum time.Duration) time.Duration {
-	jitter := source.Jitter(maximum)
-	if jitter < 0 {
-		return 0
-	}
-	if jitter > maximum {
-		return maximum
-	}
-	return jitter
+	return min(max(source.Jitter(maximum), 0), maximum)
 }

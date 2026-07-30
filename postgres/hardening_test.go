@@ -67,6 +67,33 @@ func TestNewAndStoreRejectInvalidInputs(t *testing.T) {
 	}
 }
 
+func TestValidationAcceptsExactStorageBoundaries(t *testing.T) {
+	t.Parallel()
+
+	key, _ := lease.NewKey("postgres", "boundaries")
+	if err := validate(
+		context.Background(),
+		key,
+		strings.Repeat("o", 128),
+		lease.Token(math.MaxInt64),
+		time.Millisecond,
+	); err != nil {
+		t.Fatalf("validate(exact boundaries) error = %v", err)
+	}
+	for name, input := range map[string]struct {
+		key   lease.Key
+		owner string
+	}{
+		"empty key":   {owner: "owner"},
+		"empty owner": {key: key},
+		"long owner":  {key: key, owner: strings.Repeat("o", 129)},
+	} {
+		if err := validate(context.Background(), input.key, input.owner, 1, time.Millisecond); !errors.Is(err, lease.ErrInvalidState) {
+			t.Fatalf("validate(%s) error = %v", name, err)
+		}
+	}
+}
+
 func TestBackendFailuresAreFailClosed(t *testing.T) {
 	t.Parallel()
 
@@ -166,6 +193,14 @@ func TestCleanupIsBoundedAndValidatesResponse(t *testing.T) {
 	store, _ = newStore(&fakeDatabase{rows: []pgx.Row{fakeRow{values: []any{int64(3)}}}})
 	if count, err := store.Cleanup(context.Background(), 10); err != nil || count != 3 {
 		t.Fatalf("Cleanup() = %d, %v", count, err)
+	}
+	store, _ = newStore(&fakeDatabase{rows: []pgx.Row{fakeRow{values: []any{int64(0)}}}})
+	if count, err := store.Cleanup(context.Background(), 10_000); err != nil || count != 0 {
+		t.Fatalf("Cleanup(maximum batch, zero count) = %d, %v", count, err)
+	}
+	store, _ = newStore(&fakeDatabase{rows: []pgx.Row{fakeRow{values: []any{int64(10)}}}})
+	if count, err := store.Cleanup(context.Background(), 10); err != nil || count != 10 {
+		t.Fatalf("Cleanup(full batch) = %d, %v", count, err)
 	}
 	for _, row := range []pgx.Row{fakeRow{values: []any{int64(-1)}}, fakeRow{values: []any{int64(11)}}} {
 		store, _ = newStore(&fakeDatabase{rows: []pgx.Row{row}})

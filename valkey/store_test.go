@@ -71,6 +71,16 @@ func TestGuardExportsOnlyTheAuthenticatedLeaseCoordinates(t *testing.T) {
 	if strings.Contains(guard.StorageKey(), "service-points") {
 		t.Fatalf("Guard() leaked raw lease identity: %q", guard.StorageKey())
 	}
+	boundary := owned
+	boundary.Owner = strings.Repeat("o", 128)
+	if _, err := store.Guard(boundary); err != nil {
+		t.Fatalf("Guard(128-byte owner) error = %v", err)
+	}
+	oversized := owned
+	oversized.Owner = strings.Repeat("o", 129)
+	if _, err := store.Guard(oversized); !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("Guard(129-byte owner) error = %v", err)
+	}
 
 	for _, invalid := range []lease.Record{
 		{},

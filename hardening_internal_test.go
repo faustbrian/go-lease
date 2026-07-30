@@ -33,6 +33,13 @@ type brokenReader struct{}
 
 func (brokenReader) Read([]byte) (int, error) { return 0, io.ErrUnexpectedEOF }
 
+type partialReader struct{}
+
+func (partialReader) Read(buffer []byte) (int, error) {
+	copy(buffer, []byte{0, 0, 0, 0, 0, 1, 0})
+	return 7, io.ErrUnexpectedEOF
+}
+
 type brokenOwners struct{ owner string }
 
 func (source brokenOwners) NewOwner() (string, error) {
@@ -102,6 +109,29 @@ func TestProductionDefaultsAndOwnerFailures(t *testing.T) {
 	}
 }
 
+func TestClientAcceptsCapacityAndOwnerBoundaries(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	backend := successfulStub(now)
+	client, err := NewClient(backend, ClientOptions{
+		Owners:     brokenOwners{owner: strings.Repeat("o", 128)},
+		MaxWaiters: MaxClientWaiters,
+		MaxManaged: MaxClientManaged,
+	})
+	if err != nil {
+		t.Fatalf("NewClient(maximum capacities) error = %v", err)
+	}
+	key, _ := NewKey("test", "client-boundaries")
+	policy, _ := NewPolicy(PolicyOptions{TTL: time.Second, MaxAttempts: 1})
+	if _, err := client.TryAcquire(context.Background(), key, policy); err != nil {
+		t.Fatalf("TryAcquire(128-byte owner) error = %v", err)
+	}
+	if _, err := client.Acquire(context.Background(), key, policy); err != nil {
+		t.Fatalf("Acquire(128-byte owner) error = %v", err)
+	}
+}
+
 func TestTryAcquirePropagatesBackendAndRandomSourceFailures(t *testing.T) {
 	t.Parallel()
 
@@ -130,11 +160,29 @@ func TestRetryAndTimerSourcesCoverFailureBounds(t *testing.T) {
 	if got := (randomRetry{reader: brokenReader{}}).Jitter(time.Second); got != 0 {
 		t.Fatalf("Jitter(reader failure) = %v", got)
 	}
+	if got := (randomRetry{reader: partialReader{}}).Jitter(4); got != 0 {
+		t.Fatalf("Jitter(partial reader failure) = %v", got)
+	}
 	if got := (randomRetry{reader: strings.NewReader(strings.Repeat("a", 8))}).Jitter(0); got != 0 {
 		t.Fatalf("Jitter(zero) = %v", got)
 	}
+	if got := (randomRetry{reader: strings.NewReader(strings.Repeat("a", 8))}).Jitter(-1); got != 0 {
+		t.Fatalf("Jitter(negative) = %v", got)
+	}
+	if got := (randomRetry{reader: strings.NewReader("\x00\x00\x00\x00\x00\x00\x00\x03")}).Jitter(3); got != 3 {
+		t.Fatalf("Jitter(inclusive maximum) = %v", got)
+	}
+	if got := (randomRetry{reader: strings.NewReader("\x00\x00\x00\x00\x00\x00\x00\x01")}).Jitter(1); got != 1 {
+		t.Fatalf("Jitter(one nanosecond maximum) = %v", got)
+	}
 	if got := boundedJitter(hostileRetry{value: -1}, time.Second); got != 0 {
 		t.Fatalf("boundedJitter(negative) = %v", got)
+	}
+	if got := boundedJitter(hostileRetry{value: 0}, time.Second); got != 0 {
+		t.Fatalf("boundedJitter(zero) = %v", got)
+	}
+	if got := boundedJitter(hostileRetry{value: time.Second}, time.Second); got != time.Second {
+		t.Fatalf("boundedJitter(maximum) = %v", got)
 	}
 	if got := boundedJitter(hostileRetry{value: 2 * time.Second}, time.Second); got != time.Second {
 		t.Fatalf("boundedJitter(oversized) = %v", got)
@@ -149,6 +197,32 @@ func TestRetryAndTimerSourcesCoverFailureBounds(t *testing.T) {
 	}
 	if (wallClock{}).Now().IsZero() {
 		t.Fatal("wallClock.Now() is zero")
+	}
+}
+
+func TestAcquisitionResponseFieldsAreIndependentlyValidated(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	key, _ := NewKey("test", "response-fields")
+	otherKey, _ := NewKey("test", "other")
+	valid := Record{
+		Key: key, Owner: "owner", Token: 1,
+		AcquiredAt: now, ExpiresAt: now.Add(time.Second),
+	}
+	cases := map[string]Record{
+		"key":        {Key: otherKey, Owner: valid.Owner, Token: valid.Token, AcquiredAt: valid.AcquiredAt, ExpiresAt: valid.ExpiresAt},
+		"owner":      {Key: valid.Key, Owner: "other", Token: valid.Token, AcquiredAt: valid.AcquiredAt, ExpiresAt: valid.ExpiresAt},
+		"token":      {Key: valid.Key, Owner: valid.Owner, Token: 0, AcquiredAt: valid.AcquiredAt, ExpiresAt: valid.ExpiresAt},
+		"expiration": {Key: valid.Key, Owner: valid.Owner, Token: valid.Token, AcquiredAt: valid.AcquiredAt, ExpiresAt: valid.AcquiredAt},
+	}
+	if !validAcquisition(key, valid.Owner, valid) {
+		t.Fatal("validAcquisition(valid) = false")
+	}
+	for name, record := range cases {
+		if validAcquisition(key, valid.Owner, record) {
+			t.Fatalf("validAcquisition(%s) = true", name)
+		}
 	}
 }
 
@@ -294,7 +368,11 @@ func TestHandleRejectsConcurrentOperationsWithoutBlockingState(t *testing.T) {
 	)
 	done := make(chan error, 1)
 	go func() { done <- handle.Validate(context.Background()) }()
-	<-entered
+	select {
+	case <-entered:
+	case err := <-done:
+		t.Fatalf("Validate() returned before backend entry: %v", err)
+	}
 	if handle.State() != StateActive {
 		t.Fatalf("State() = %s", handle.State())
 	}
@@ -434,6 +512,43 @@ func TestHandleRejectsMismatchedSuccessfulResponses(t *testing.T) {
 	}
 }
 
+func TestRenewUsesSafetyBudgetAndReleasedValidateDoesNotCallBackend(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	key, _ := NewKey("test", "renew-budget")
+	policy, _ := NewPolicy(PolicyOptions{
+		TTL: time.Second, SafetyMargin: 250 * time.Millisecond, MaxAttempts: 1,
+	})
+	record := Record{
+		Key: key, Owner: "owner", Token: 1,
+		AcquiredAt: now, ExpiresAt: now.Add(time.Second),
+	}
+	backend := successfulStub(now)
+	handle := newHandle(backend, fixedClock{now}, timerSleeper{}, make(chan struct{}, 1), policy, record)
+	if err := handle.Renew(context.Background()); err != nil {
+		t.Fatalf("Renew() error = %v", err)
+	}
+	if expected := now.Add(750 * time.Millisecond); !handle.Deadline().Equal(expected) {
+		t.Fatalf("Deadline() = %v, want %v", handle.Deadline(), expected)
+	}
+	if err := handle.Release(context.Background()); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	validateCalls := 0
+	backend.check = func(context.Context, Record) (Record, error) {
+		validateCalls++
+		return record, nil
+	}
+	handle.backend = backend
+	if err := handle.Validate(context.Background()); !errors.Is(err, ErrInvalidState) {
+		t.Fatalf("Validate(released) error = %v", err)
+	}
+	if validateCalls != 0 {
+		t.Fatalf("Validate(released) backend calls = %d", validateCalls)
+	}
+}
+
 func TestStateNamesAndObservationOutcomes(t *testing.T) {
 	t.Parallel()
 
@@ -483,6 +598,13 @@ func TestObservedBackendValidationAndAllOperations(t *testing.T) {
 	}
 	if _, err := NewObservedBackend(backend, fixedClock{now}, many...); err == nil {
 		t.Fatal("NewObservedBackend(too many) error = nil")
+	}
+	maximum := make([]Observer, 16)
+	for index := range maximum {
+		maximum[index] = observer
+	}
+	if _, err := NewObservedBackend(backend, fixedClock{now}, maximum...); err != nil {
+		t.Fatalf("NewObservedBackend(maximum observers) error = %v", err)
 	}
 	observed, _ := NewObservedBackend(backend, fixedClock{now}, observer)
 	key, _ := NewKey("test", "observed")

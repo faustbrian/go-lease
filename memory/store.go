@@ -90,8 +90,16 @@ func (store *Store) Renew(
 	defer store.mu.Unlock()
 	current, exists := store.entries[owned.Key.String()]
 	now := store.clock.Now()
-	if !exists || !current.active || !sameOwner(current.record, owned) ||
-		!now.Before(current.record.ExpiresAt) {
+	if !exists {
+		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "renew")
+	}
+	if !current.active {
+		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "renew")
+	}
+	if !sameOwner(current.record, owned) {
+		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "renew")
+	}
+	if !now.Before(current.record.ExpiresAt) {
 		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "renew")
 	}
 	current.record.ExpiresAt = now.Add(ttl)
@@ -107,8 +115,16 @@ func (store *Store) Validate(ctx context.Context, owned lease.Record) (lease.Rec
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	current, exists := store.entries[owned.Key.String()]
-	if !exists || !current.active || !sameOwner(current.record, owned) ||
-		!store.clock.Now().Before(current.record.ExpiresAt) {
+	if !exists {
+		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "validate")
+	}
+	if !current.active {
+		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "validate")
+	}
+	if !sameOwner(current.record, owned) {
+		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "validate")
+	}
+	if !store.clock.Now().Before(current.record.ExpiresAt) {
 		return lease.Record{}, lease.Wrap(lease.ErrStaleOwner, "validate")
 	}
 	return current.record, nil
@@ -122,10 +138,16 @@ func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 	store.mu.Lock()
 	defer store.mu.Unlock()
 	current, exists := store.entries[owned.Key.String()]
-	if exists && !current.active && sameOwner(current.record, owned) {
-		return nil
+	if !exists {
+		return lease.Wrap(lease.ErrStaleOwner, "release")
 	}
-	if !exists || !current.active || !sameOwner(current.record, owned) {
+	if !current.active {
+		if sameOwner(current.record, owned) {
+			return nil
+		}
+		return lease.Wrap(lease.ErrStaleOwner, "release")
+	}
+	if !sameOwner(current.record, owned) {
 		return lease.Wrap(lease.ErrStaleOwner, "release")
 	}
 	current.active = false

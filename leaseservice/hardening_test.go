@@ -65,6 +65,22 @@ func (sleeper serviceSleeper) Sleep(ctx context.Context, _ time.Duration) error 
 		return nil
 	}
 }
+
+type observableServiceSleeper struct {
+	trigger <-chan struct{}
+	stopped chan<- struct{}
+}
+
+func (sleeper observableServiceSleeper) Sleep(ctx context.Context, _ time.Duration) error {
+	select {
+	case <-ctx.Done():
+		close(sleeper.stopped)
+		return ctx.Err()
+	case <-sleeper.trigger:
+		close(sleeper.stopped)
+		return nil
+	}
+}
 func (backend *serviceBackend) Validate(_ context.Context, record lease.Record) (lease.Record, error) {
 	return record, nil
 }
@@ -106,10 +122,18 @@ func TestAcquireRacingShutdownReleasesReservation(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
+	trigger := make(chan struct{})
+	stopped := make(chan struct{})
 	backend := &serviceBackend{
 		now: now, entered: make(chan struct{}), proceed: make(chan struct{}),
 	}
-	client, _ := lease.NewClient(backend, lease.ClientOptions{Clock: serviceClock{now}})
+	client, _ := lease.NewClient(backend, lease.ClientOptions{
+		Clock: serviceClock{now},
+		Sleeper: observableServiceSleeper{
+			trigger: trigger,
+			stopped: stopped,
+		},
+	})
 	manager, _ := New(client, 1)
 	key, _ := lease.NewKey("service", "race")
 	policy, _ := lease.NewPolicy(lease.PolicyOptions{
@@ -120,7 +144,11 @@ func TestAcquireRacingShutdownReleasesReservation(t *testing.T) {
 		_, err := manager.Acquire(context.Background(), key, policy)
 		result <- err
 	}()
-	<-backend.entered
+	select {
+	case <-backend.entered:
+	case err := <-result:
+		t.Fatalf("Acquire() returned before backend entry: %v", err)
+	}
 	if err := manager.Shutdown(context.Background()); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
@@ -130,6 +158,12 @@ func TestAcquireRacingShutdownReleasesReservation(t *testing.T) {
 	}
 	if manager.Active() != 0 {
 		t.Fatalf("Active() = %d", manager.Active())
+	}
+	select {
+	case <-stopped:
+	default:
+		close(trigger)
+		t.Fatal("racing shutdown did not stop managed renewal")
 	}
 }
 
@@ -160,6 +194,9 @@ func TestManagedStartAndShutdownFailuresAreReported(t *testing.T) {
 	if _, err := manager.Acquire(context.Background(), key, plain); err != nil {
 		t.Fatalf("Acquire() error = %v", err)
 	}
+	if len(manager.entries) != 1 || manager.entries[0].managed != nil {
+		t.Fatalf("plain acquisition managed entry = %#v", manager.entries)
+	}
 	if err := manager.Shutdown(context.Background()); !errors.Is(err, lease.ErrAmbiguousOutcome) {
 		t.Fatalf("Shutdown(release failure) error = %v", err)
 	}
@@ -178,6 +215,9 @@ func TestManagedAcquireAndShutdownStopRenewal(t *testing.T) {
 	})
 	if _, err := manager.Acquire(context.Background(), key, policy); err != nil {
 		t.Fatalf("Acquire() error = %v", err)
+	}
+	if len(manager.entries) != 1 || manager.entries[0].managed == nil {
+		t.Fatalf("managed acquisition entry = %#v", manager.entries)
 	}
 	if err := manager.Shutdown(context.Background()); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
@@ -201,6 +241,9 @@ func TestManagedRenewalOutlivesAcquireContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	if _, err := manager.Acquire(ctx, key, policy); err != nil {
 		t.Fatalf("Acquire() error = %v", err)
+	}
+	if len(manager.entries) != 1 || manager.entries[0].managed == nil {
+		t.Fatalf("managed acquisition entry = %#v", manager.entries)
 	}
 	cancel()
 	trigger <- struct{}{}

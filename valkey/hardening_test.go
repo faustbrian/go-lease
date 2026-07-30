@@ -13,10 +13,16 @@ import (
 func TestStoreRejectsInvalidInputsAndPrefixes(t *testing.T) {
 	t.Parallel()
 
+	if _, err := newStore(nil, "lease"); !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("newStore(nil executor) error = %v", err)
+	}
 	for _, prefix := range []string{"", strings.Repeat("x", 65), "bad prefix", "bad{tag}"} {
 		if _, err := newStore(&fakeExecutor{}, prefix); !errors.Is(err, lease.ErrInvalidState) {
 			t.Fatalf("newStore(%q) error = %v", prefix, err)
 		}
+	}
+	if _, err := newStore(&fakeExecutor{}, strings.Repeat("x", 64)); err != nil {
+		t.Fatalf("newStore(64-byte prefix) error = %v", err)
 	}
 	store, _ := newStore(&fakeExecutor{}, "lease")
 	key, _ := lease.NewKey("valkey", "input")
@@ -37,6 +43,33 @@ func TestStoreRejectsInvalidInputsAndPrefixes(t *testing.T) {
 	cancel()
 	if _, err := store.TryAcquire(ctx, key, "owner", time.Second); !errors.Is(err, lease.ErrCanceled) {
 		t.Fatalf("TryAcquire(canceled) error = %v", err)
+	}
+}
+
+func TestValidationAcceptsExactInputBoundaries(t *testing.T) {
+	t.Parallel()
+
+	key, _ := lease.NewKey("valkey", "boundaries")
+	if err := validate(
+		context.Background(),
+		key,
+		strings.Repeat("o", 128),
+		1,
+		time.Millisecond,
+	); err != nil {
+		t.Fatalf("validate(exact boundaries) error = %v", err)
+	}
+	for name, input := range map[string]struct {
+		key   lease.Key
+		owner string
+	}{
+		"empty key":   {owner: "owner"},
+		"empty owner": {key: key},
+		"long owner":  {key: key, owner: strings.Repeat("o", 129)},
+	} {
+		if err := validate(context.Background(), input.key, input.owner, 1, time.Millisecond); !errors.Is(err, lease.ErrInvalidState) {
+			t.Fatalf("validate(%s) error = %v", name, err)
+		}
 	}
 }
 
@@ -78,7 +111,16 @@ func TestStoreClassifiesExecutorFailuresAndCorruptReplies(t *testing.T) {
 		t.Fatalf("classified error leaked backend detail: %v", classified)
 	}
 
-	badReplies := [][]string{{}, {"ok"}, {"ok", "0", "1", "2"}, {"ok", "x", "1", "2"}, {"ok", "1", "2", "1"}}
+	badReplies := [][]string{
+		{},
+		{"ok"},
+		{"ok", "0", "1", "2"},
+		{"ok", "x", "1", "2"},
+		{"ok", "1", "x", "2"},
+		{"ok", "1", "1", "x"},
+		{"ok", "1", "2", "1"},
+		{"ok", "1", "2", "2"},
+	}
 	for _, reply := range badReplies {
 		store, _ := newStore(&fakeExecutor{reply: reply}, "lease")
 		if _, err := store.TryAcquire(context.Background(), key, "owner", time.Second); !errors.Is(err, lease.ErrBackendUnavailable) {
@@ -104,8 +146,14 @@ func TestReleaseResponsesAndHashTagFailures(t *testing.T) {
 			t.Fatalf("Release(%v) error = %v", reply, err)
 		}
 	}
-	if hashTag("missing") != "" || hashTag("}bad{") != "" {
+	if hashTag("missing") != "" || hashTag("x}") != "" || hashTag("}bad{") != "" {
 		t.Fatal("hashTag accepted malformed keys")
+	}
+	if tag := hashTag("{slot}"); tag != "slot" {
+		t.Fatalf("hashTag(valid) = %q", tag)
+	}
+	if tag := hashTag("x{slot}"); tag != "slot" {
+		t.Fatalf("hashTag(prefixed) = %q", tag)
 	}
 }
 

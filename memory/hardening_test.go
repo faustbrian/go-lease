@@ -19,6 +19,12 @@ func TestOptionsCapacityAndOverflowAreBounded(t *testing.T) {
 		t.Fatalf("New(invalid) error = %v", err)
 	}
 	clock := leasetest.NewClock(time.Now())
+	if _, err := New(Options{Clock: clock}); !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("New(zero capacity) error = %v", err)
+	}
+	if _, err := New(Options{MaxKeys: 1}); !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("New(nil clock) error = %v", err)
+	}
 	store, _ := New(Options{Clock: clock, MaxKeys: 1})
 	first, _ := lease.NewKey("memory", "first")
 	second, _ := lease.NewKey("memory", "second")
@@ -31,6 +37,44 @@ func TestOptionsCapacityAndOverflowAreBounded(t *testing.T) {
 	store.entries[first.String()] = entry{record: lease.Record{Key: first, Token: lease.Token(math.MaxUint64)}}
 	if _, err := store.TryAcquire(context.Background(), first, "owner", time.Second); !errors.Is(err, lease.ErrBackendUnavailable) {
 		t.Fatalf("TryAcquire(overflow) error = %v", err)
+	}
+}
+
+func TestCurrentOwnerCanRenewValidateAndRelease(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	clock := leasetest.NewClock(now)
+	store, _ := New(Options{Clock: clock, MaxKeys: 1})
+	key, _ := lease.NewKey("memory", "current-owner")
+	record, _ := store.TryAcquire(context.Background(), key, "owner", time.Second)
+	clock.Advance(100 * time.Millisecond)
+	renewed, err := store.Renew(context.Background(), record, 2*time.Second)
+	if err != nil {
+		t.Fatalf("Renew() error = %v", err)
+	}
+	if expected := now.Add(2100 * time.Millisecond); !renewed.ExpiresAt.Equal(expected) {
+		t.Fatalf("Renew() expiry = %v, want %v", renewed.ExpiresAt, expected)
+	}
+	if _, err := store.Validate(context.Background(), renewed); err != nil {
+		t.Fatalf("Validate() error = %v", err)
+	}
+	if err := store.Release(context.Background(), renewed); err != nil {
+		t.Fatalf("Release() error = %v", err)
+	}
+	if _, err := store.Renew(context.Background(), renewed, time.Second); !errors.Is(err, lease.ErrStaleOwner) {
+		t.Fatalf("Renew(released) error = %v", err)
+	}
+	wrong := renewed
+	wrong.Owner = "successor"
+	if err := store.Release(context.Background(), wrong); !errors.Is(err, lease.ErrStaleOwner) {
+		t.Fatalf("Release(released wrong owner) error = %v", err)
+	}
+	missingKey, _ := lease.NewKey("memory", "missing")
+	missing := renewed
+	missing.Key = missingKey
+	if _, err := store.Validate(context.Background(), missing); !errors.Is(err, lease.ErrStaleOwner) {
+		t.Fatalf("Validate(missing) error = %v", err)
 	}
 }
 

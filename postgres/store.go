@@ -278,8 +278,22 @@ func validate(
 	if err := ctx.Err(); err != nil {
 		return lease.Wrap(lease.ErrCanceled, "postgres context")
 	}
-	if key.String() == "" || owner == "" || len(owner) > 128 || token == 0 ||
-		token > lease.Token(9223372036854775807) || ttl <= 0 || ttl.Milliseconds() <= 0 {
+	if key.String() == "" {
+		return lease.Wrap(lease.ErrInvalidState, "postgres input")
+	}
+	if owner == "" {
+		return lease.Wrap(lease.ErrInvalidState, "postgres input")
+	}
+	if len(owner) > 128 {
+		return lease.Wrap(lease.ErrInvalidState, "postgres input")
+	}
+	if token == 0 {
+		return lease.Wrap(lease.ErrInvalidState, "postgres input")
+	}
+	if token > lease.Token(9223372036854775807) {
+		return lease.Wrap(lease.ErrInvalidState, "postgres input")
+	}
+	if ttl < time.Millisecond {
 		return lease.Wrap(lease.ErrInvalidState, "postgres input")
 	}
 	return nil

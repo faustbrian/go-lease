@@ -114,6 +114,15 @@ func TestOpenChecksValkeyVersionAndEviction(t *testing.T) {
 	}
 }
 
+func TestValkeyMajorSkipsUnrelatedInfoLines(t *testing.T) {
+	t.Parallel()
+
+	major, err := valkeyMajor("redis_version:9.0.0\r\nvalkey_version:10.1.0\r\n")
+	if err != nil || major != 10 {
+		t.Fatalf("valkeyMajor() = %d, %v", major, err)
+	}
+}
+
 func TestCheckPropagatesInspectionFailures(t *testing.T) {
 	t.Parallel()
 

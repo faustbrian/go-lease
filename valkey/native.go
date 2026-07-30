@@ -58,11 +58,15 @@ func (executor *nativeExecutor) Check(ctx context.Context) error {
 		return classify(ctx, err, false)
 	}
 	major, err := valkeyMajor(info)
-	if err != nil || major < 9 {
-		if err == nil {
-			err = errors.New("valkey version is older than 9")
-		}
+	if err != nil {
 		return failure.Wrap(lease.ErrBackendUnavailable, err, "Valkey inspection")
+	}
+	if major < 9 {
+		return failure.Wrap(
+			lease.ErrBackendUnavailable,
+			errors.New("valkey version is older than 9"),
+			"Valkey inspection",
+		)
 	}
 	config, err := executor.client.Do(
 		ctx, executor.client.B().ConfigGet().Parameter("maxmemory-policy").Build(),
