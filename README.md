@@ -1,6 +1,6 @@
 # lease
 
-`lease` is a fenced, time-bounded distributed lease primitive for Go 1.26.5
+`lease` is a fenced, time-bounded distributed lease primitive for Go 1.26.6
 and newer. It provides explicit owners, backend-anchored expiry, renewal,
 validation, compare-and-release, and monotonically increasing fencing tokens
 for native Valkey and PostgreSQL backends.
