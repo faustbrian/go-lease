@@ -1,6 +1,6 @@
 # Contributing
 
-Use Go 1.26.5, add behavior through a red-green-refactor cycle, and preserve the
+Use Go 1.26.6, add behavior through a red-green-refactor cycle, and preserve the
 documented backend continuity contract. Run:
 
 ```text

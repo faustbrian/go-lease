@@ -1,6 +1,6 @@
 # Compatibility and rolling versions
 
-The minimum Go version is 1.26.5. The v1 API baseline is checked by
+The minimum Go version is 1.26.6. The v1 API baseline is checked by
 `make api-compat`. PostgreSQL versions 14 through 18 and Valkey 9 are exercised
 by the integration matrix.
 

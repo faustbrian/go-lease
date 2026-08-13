@@ -1,6 +1,6 @@
 module github.com/faustbrian/golib/pkg/lease
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/faustbrian/golib/pkg/migrations v0.0.0-20260729101900-306a65952c01
