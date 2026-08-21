@@ -10,8 +10,8 @@
 
 - Remove unused CLI-related indirect dependencies from canonical module
   metadata.
-- Pin owned sibling modules to exact resolvable main pseudo-versions so
-  standalone and clean external consumers use immutable dependency content.
+- Normalize owned sibling requirements to the unpublished local `v0.0.0`
+  source proxy so repository manifests contain no stale pseudo-versions.
 - Refresh owned-module checksums against the final consolidated archives.
 - Normalized standalone module metadata against the canonical owned dependency
   graph, including complete checksums for clean consumer resolution.
@@ -47,8 +47,8 @@
 
 - Validate the binary API export baseline with the canonical `apidiff` gate
   instead of interpreting it as a text symbol list.
-- Pin internal golib dependencies to immutable source revisions so clean
-  consumers do not depend on rewritten or missing module tags.
+- Resolve internal Golib dependencies from the content-bound local source
+  proxy until the dependency-ordered `v1.0.0` tags are published.
 - Bound acquisition waits independently from injectable clock anomalies.
 - Prevent observer re-entrancy from deadlocking handle state transitions.
 - Reject corrupt or incompatible successful responses that change ownership.
@@ -56,8 +56,3 @@
 - Isolate blocking observers behind bounded best-effort callback slots.
 - Report PostgreSQL fence exhaustion as a permanent unavailable state.
 - Bound handle admission with a conservative local monotonic deadline.
-
-## 1.0.0 - 2026-07-16
-
-Release-ready local implementation and API baseline. Tag publication follows
-the final hosted verification performed by the maintainer.
