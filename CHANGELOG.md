@@ -45,6 +45,8 @@
 
 ### Fixed
 
+- Keep the conformance setup lease valid while slower durable backends prove
+  contention before exercising the separate short-lived renewal boundary.
 - Validate the binary API export baseline with the canonical `apidiff` gate
   instead of interpreting it as a text symbol list.
 - Resolve internal Golib dependencies from the content-bound local source

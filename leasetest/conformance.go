@@ -28,7 +28,7 @@ func RunBackendConformance(
 			t.Fatalf("NewKey() error = %v", err)
 		}
 		first, err := fixture.Backend.TryAcquire(
-			context.Background(), key, "owner-a", 100*time.Millisecond,
+			context.Background(), key, "owner-a", time.Minute,
 		)
 		if err != nil {
 			t.Fatalf("TryAcquire(first) error = %v", err)
