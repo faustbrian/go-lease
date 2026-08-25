@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
+	lease "github.com/faustbrian/go-lease"
 )
 
 func TestResourceRejectsStaleAndReplayWrites(t *testing.T) {

@@ -7,8 +7,8 @@ import (
 	"errors"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/internal/failure"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/internal/failure"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
+	lease "github.com/faustbrian/go-lease"
 	valkeygo "github.com/valkey-io/valkey-go"
 	valkeymock "github.com/valkey-io/valkey-go/mock"
 	"go.uber.org/mock/gomock"

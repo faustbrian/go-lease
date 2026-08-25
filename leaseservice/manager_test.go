@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/leaseservice"
-	"github.com/faustbrian/golib/pkg/lease/leasetest"
-	"github.com/faustbrian/golib/pkg/lease/memory"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/leaseservice"
+	"github.com/faustbrian/go-lease/leasetest"
+	"github.com/faustbrian/go-lease/memory"
 )
 
 func TestManagerBoundsHandlesAndReleasesOnShutdown(t *testing.T) {

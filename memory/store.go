@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
+	lease "github.com/faustbrian/go-lease"
 )
 
 // Options bounds and configures the process-local reference backend.

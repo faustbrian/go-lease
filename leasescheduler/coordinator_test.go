@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/leasescheduler"
-	"github.com/faustbrian/golib/pkg/lease/leasetest"
-	"github.com/faustbrian/golib/pkg/lease/memory"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/leasescheduler"
+	"github.com/faustbrian/go-lease/leasetest"
+	"github.com/faustbrian/go-lease/memory"
 )
 
 func TestOnOneServerProvidesFenceAndReleases(t *testing.T) {

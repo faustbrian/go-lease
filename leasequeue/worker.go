@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/internal/guard"
-	"github.com/faustbrian/golib/pkg/queue/core"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/internal/guard"
+	"github.com/faustbrian/go-queue/core"
 )
 
 type tokenContextKey struct{}

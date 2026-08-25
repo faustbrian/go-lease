@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/leasequeue"
-	"github.com/faustbrian/golib/pkg/lease/leasetest"
-	"github.com/faustbrian/golib/pkg/lease/memory"
-	"github.com/faustbrian/golib/pkg/queue/core"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/leasequeue"
+	"github.com/faustbrian/go-lease/leasetest"
+	"github.com/faustbrian/go-lease/memory"
+	"github.com/faustbrian/go-queue/core"
 )
 
 type task struct{ body []byte }

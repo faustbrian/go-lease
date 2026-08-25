@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/internal/failure"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/internal/failure"
 	valkeygo "github.com/valkey-io/valkey-go"
 )
 

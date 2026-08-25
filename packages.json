@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-lease",
+  "packages": [
+    {
+      "module_directory": ".",
+      "directory": ".",
+      "name": "lease",
+      "import_path": "github.com/faustbrian/go-lease",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "examples/postgres",
+      "name": "main",
+      "import_path": "github.com/faustbrian/go-lease/examples/postgres",
+      "kind": "example",
+      "production": false,
+      "executable": true,
+      "coverage_required": false,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "examples/protectedwrite",
+      "name": "main",
+      "import_path": "github.com/faustbrian/go-lease/examples/protectedwrite",
+      "kind": "example",
+      "production": false,
+      "executable": true,
+      "coverage_required": false,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "examples/valkey",
+      "name": "main",
+      "import_path": "github.com/faustbrian/go-lease/examples/valkey",
+      "kind": "example",
+      "production": false,
+      "executable": true,
+      "coverage_required": false,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/failure",
+      "name": "failure",
+      "import_path": "github.com/faustbrian/go-lease/internal/failure",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/guard",
+      "name": "guard",
+      "import_path": "github.com/faustbrian/go-lease/internal/guard",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "leasequeue",
+      "name": "leasequeue",
+      "import_path": "github.com/faustbrian/go-lease/leasequeue",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "leasescheduler",
+      "name": "leasescheduler",
+      "import_path": "github.com/faustbrian/go-lease/leasescheduler",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "leaseservice",
+      "name": "leaseservice",
+      "import_path": "github.com/faustbrian/go-lease/leaseservice",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "leasetest",
+      "name": "leasetest",
+      "import_path": "github.com/faustbrian/go-lease/leasetest",
+      "kind": "test support",
+      "production": false,
+      "executable": true,
+      "coverage_required": false,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "memory",
+      "name": "memory",
+      "import_path": "github.com/faustbrian/go-lease/memory",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "postgres",
+      "name": "postgres",
+      "import_path": "github.com/faustbrian/go-lease/postgres",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "valkey",
+      "name": "valkey",
+      "import_path": "github.com/faustbrian/go-lease/valkey",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    }
+  ]
+}

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
+	lease "github.com/faustbrian/go-lease"
 )
 
 func TestStoreRejectsInvalidInputsAndPrefixes(t *testing.T) {

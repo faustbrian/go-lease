@@ -1,2 +1,5 @@
-/coverage.out
-/gremlins.json
+.artifacts/
+.tools/
+.gocache*/
+.DS_Store
+coverage.out

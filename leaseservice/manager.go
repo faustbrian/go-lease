@@ -6,8 +6,8 @@ import (
 	"errors"
 	"sync"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	serviceintegration "github.com/faustbrian/golib/pkg/service/integration"
+	lease "github.com/faustbrian/go-lease"
+	serviceintegration "github.com/faustbrian/go-service/integration"
 )
 
 type owned struct {

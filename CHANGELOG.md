@@ -2,12 +2,15 @@
 
 ## Unreleased
 
+## 1.0.0 - 2026-08-25
+
 ### Documentation
 
 - Link the package README to the repository-wide Golib documentation portal.
 
 ### Changed
 
+- Publish the module from its standalone `github.com/faustbrian/go-lease` identity while preserving its documented API and behavior.
 - Remove unused CLI-related indirect dependencies from canonical module
   metadata.
 - Normalize owned sibling requirements to the unpublished local `v0.0.0`

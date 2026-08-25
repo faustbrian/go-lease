@@ -1,11 +1,11 @@
-module github.com/faustbrian/golib/pkg/lease
+module github.com/faustbrian/go-lease
 
 go 1.26.6
 
 require (
-	github.com/faustbrian/golib/pkg/migrations v0.0.0
-	github.com/faustbrian/golib/pkg/queue v0.0.0
-	github.com/faustbrian/golib/pkg/service v0.0.0
+	github.com/faustbrian/go-migrations v1.0.0
+	github.com/faustbrian/go-queue v1.0.0
+	github.com/faustbrian/go-service v1.0.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/valkey-io/valkey-go v1.0.76
 	github.com/valkey-io/valkey-go/mock v1.0.76
@@ -13,9 +13,9 @@ require (
 )
 
 require (
-	github.com/faustbrian/golib/pkg/cli v0.0.0 // indirect
-	github.com/faustbrian/golib/pkg/correlation v0.0.0 // indirect
-	github.com/faustbrian/golib/pkg/identifier v0.0.0 // indirect
+	github.com/faustbrian/go-cli v1.0.0 // indirect
+	github.com/faustbrian/go-correlation v1.0.0 // indirect
+	github.com/faustbrian/go-identifier v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

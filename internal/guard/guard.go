@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
+	lease "github.com/faustbrian/go-lease"
 )
 
 // Run acquires, optionally renews, cancels on loss, and explicitly releases.

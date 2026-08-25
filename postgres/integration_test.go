@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/golib/pkg/lease"
-	"github.com/faustbrian/golib/pkg/lease/leasetest"
-	leasepostgres "github.com/faustbrian/golib/pkg/lease/postgres"
+	lease "github.com/faustbrian/go-lease"
+	"github.com/faustbrian/go-lease/leasetest"
+	leasepostgres "github.com/faustbrian/go-lease/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
