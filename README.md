@@ -62,7 +62,7 @@ the returned error. No acquisition order or starvation guarantee is provided.
 See the [documentation index](docs/README.md), [security policy](SECURITY.md),
 and [changelog](CHANGELOG.md).
 
-## Ecosystem
+## Documentation
 
-Use the [Golib documentation portal](https://github.com/faustbrian/golib/blob/main/docs/index.md)
-to choose companion packages, supported stacks, recipes, and operations guidance.
+Use the [documentation index](docs/README.md) for package-owned guides,
+operational contracts, examples, and maintainer references.
