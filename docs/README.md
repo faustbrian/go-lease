@@ -1,20 +1,39 @@
 # Documentation
 
-- Concepts: [state machine](state-machine.md), [fencing](fencing.md),
-  [backend guarantees](backend-guarantees.md), [API](api.md)
-- Setup: [Valkey](quickstart-valkey.md),
-  [PostgreSQL](quickstart-postgres.md), [migrations](migrations.md)
-- Integration: [unique jobs](unique-jobs.md), [schedulers](schedulers.md),
-  [protected writes](protected-writes.md), [service shutdown](shutdown.md)
-- Operations: [renewal and loss](renewal-and-loss.md),
-  [Kubernetes](kubernetes.md), [failover](failover.md),
-  [operations](operations.md), [troubleshooting](troubleshooting.md)
-- Assurance: [threat model](threat-model.md),
-  [acceptance audit](audit-evidence.md),
-  [failure matrix](failure-matrix.md), [resource budgets](resource-budgets.md),
-  [hardening evidence](hardening.md), [performance](performance.md),
-  [benchmark baseline](benchmark-baseline.md), [fuzz report](fuzz-report.md),
-  [race and stress report](race-stress-report.md),
-  [mutation report](mutation-report.md), [compatibility](compatibility.md)
-- Migration: [Laravel locks and unique jobs](laravel-migration.md)
-- Help: [FAQ](faq.md)
+## Getting started
+
+- [Valkey quickstart](quickstart-valkey.md)
+- [PostgreSQL quickstart](quickstart-postgres.md)
+- [API reference](api.md)
+- [Database migrations](migrations.md)
+
+## Concepts and integrations
+
+- [State machine](state-machine.md)
+- [Fencing](fencing.md)
+- [Backend guarantees](backend-guarantees.md)
+- [Protected writes](protected-writes.md)
+- [Unique jobs](unique-jobs.md)
+- [Schedulers](schedulers.md)
+- [Renewal and loss](renewal-and-loss.md)
+- [Service shutdown](shutdown.md)
+
+## Operations
+
+- [Operations guide](operations.md)
+- [Kubernetes](kubernetes.md)
+- [Failover](failover.md)
+- [Failure matrix](failure-matrix.md)
+- [Resource budgets](resource-budgets.md)
+- [Threat model](threat-model.md)
+- [Performance](performance.md)
+- [Troubleshooting](troubleshooting.md)
+
+## Reference and maintenance
+
+- [Compatibility](compatibility.md)
+- [Benchmark baseline](benchmark-baseline.md)
+- [Laravel migration](laravel-migration.md)
+- [FAQ](faq.md)
+- [Contributing](../CONTRIBUTING.md)
+- [Release history](../CHANGELOG.md)

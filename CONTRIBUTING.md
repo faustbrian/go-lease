@@ -18,6 +18,11 @@ New direct dependencies and dependency updates must follow the
 [dependency governance policy](AGENTS.md#dependencies-and-supply-chain). Package-local
 update bots are forbidden; the root policy owns every module and action update.
 
+Repository verification is provided by the released `go-library-tools` CLI.
+Keep package-specific policy in `modules.json`, `packages.json`,
+the repository configuration, and `verification/package.mk`; do not recreate
+shared tooling in the consumer repository.
+
 Specification-backed changes must follow the
 [specification governance contract](AGENTS.md#design), update
 the affected stable decision entries, and complete the Specification Decisions
