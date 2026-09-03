@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-lease",
+  "module": ".",
+  "package": "internal/failure",
+  "gate": "mutation",
+  "input_digest": "sha256:5a279eee9ca0981a206799fc284e31d5d20be833760c4902a7dc5cab89769fe0",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:66a3162e44f82a4bdfdc9398d2e2f488146fe817647978a21b3f51ad7b87375f",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.27.0",
+    "gremlins_binary_sha256": "sha256:6a2beddc477eb410f8a670b6c9049558563d3c4327498fe31604d31c773a959e"
+  },
+  "completed_at": "2026-09-03T10:58:51.995171Z"
+}
