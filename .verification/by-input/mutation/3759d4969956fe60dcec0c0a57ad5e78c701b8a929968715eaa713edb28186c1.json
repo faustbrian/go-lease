@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-lease",
+  "module": ".",
+  "package": "memory",
+  "gate": "mutation",
+  "input_digest": "sha256:3759d4969956fe60dcec0c0a57ad5e78c701b8a929968715eaa713edb28186c1",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:b26e80463c535b4ca3270abe4e298234b7d5753488fd471bcc6f3e5fdecdf730",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.27.0",
+    "gremlins_binary_sha256": "sha256:6a2beddc477eb410f8a670b6c9049558563d3c4327498fe31604d31c773a959e"
+  },
+  "completed_at": "2026-09-03T11:06:08.427276Z"
+}
