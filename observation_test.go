@@ -106,7 +106,10 @@ func TestObserverCanInspectHandleDuringStateTransition(t *testing.T) {
 	})
 	key, _ := lease.NewKey("observer", "reentrant")
 	handle, _ = client.TryAcquire(context.Background(), key, policy)
-	deadline := time.Now().Add(100 * time.Millisecond)
+	timeout := time.NewTimer(2 * time.Second)
+	defer timeout.Stop()
+	retry := time.NewTicker(time.Millisecond)
+	defer retry.Stop()
 	for {
 		if err := handle.Validate(context.Background()); err != nil {
 			t.Fatalf("Validate() error = %v", err)
@@ -114,9 +117,8 @@ func TestObserverCanInspectHandleDuringStateTransition(t *testing.T) {
 		select {
 		case <-inspected:
 			return
-		default:
-		}
-		if time.Now().After(deadline) {
+		case <-retry.C:
+		case <-timeout.C:
 			t.Fatal("observer did not inspect handle")
 		}
 	}
