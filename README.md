@@ -66,3 +66,7 @@ and [changelog](CHANGELOG.md).
 
 Use the [documentation index](docs/README.md) for package-owned guides,
 operational contracts, examples, and maintainer references.
+
+For ecosystem-wide package selection and ownership guidance, see the versioned
+[Golib ecosystem index](https://github.com/faustbrian/go-library-tools/blob/v1.3.0/docs/ecosystem/README.md)
+and its [Persistence and durability family](https://github.com/faustbrian/go-library-tools/blob/v1.3.0/docs/ecosystem/design-language.md#package-families-and-selection).

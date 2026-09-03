@@ -4,13 +4,17 @@
 
 ### Changed
 
-- Replace copied repository tooling with the pinned `go-library-tools` v1.0.4
+- Adopt schema-v2 cohesion metadata and a local cohesion gate for the public
+  module, backed by the checksum-verified `go-library-tools` v1.3.0 release.
+- Replace copied repository tooling with the pinned `go-library-tools` v1.3.0
   contract while retaining package-owned policy and verification evidence.
 
 ### Documentation
 
 - Replace archived monorepo links and completed execution artifacts with a
   standalone, human-oriented documentation structure.
+- Link the module to the immutable v1.3.0 Golib ecosystem index and family
+  guidance.
 
 ## 1.0.0 - 2026-08-25
 
