@@ -228,10 +228,7 @@ func TestShutdownUsesOneCallerIndependentCleanupAndCachesResult(t *testing.T) {
 
 	now := time.Now()
 	releaseErr := errors.New("release failed")
-	backend := &serviceBackend{
-		now: now, releaseErr: releaseErr,
-		releaseEntered: make(chan struct{}), releaseProceed: make(chan struct{}),
-	}
+	backend := &serviceBackend{now: now, releaseErr: releaseErr}
 	client, _ := lease.NewClient(backend, lease.ClientOptions{Clock: serviceClock{now: now}})
 	manager, _ := New(client, 1)
 	key, _ := lease.NewKey("service", "shared-shutdown")
@@ -239,6 +236,8 @@ func TestShutdownUsesOneCallerIndependentCleanupAndCachesResult(t *testing.T) {
 	if _, err := manager.Acquire(context.Background(), key, policy); err != nil {
 		t.Fatalf("Acquire() error = %v", err)
 	}
+	backend.releaseEntered = make(chan struct{})
+	backend.releaseProceed = make(chan struct{})
 
 	short, cancel := context.WithCancel(context.Background())
 	first := make(chan error, 1)
