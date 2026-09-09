@@ -17,17 +17,17 @@ type owned struct {
 
 // Manager bounds managed renewal goroutines and explicit shutdown release.
 type Manager struct {
-	mu              sync.Mutex
-	client          *lease.Client
-	max             uint32
-	active          uint32
-	acquiring       uint32
-	closed          bool
-	entries         []owned
-	acquisitions    *sync.Cond
-	shutdownStarted bool
-	shutdownDone    chan struct{}
-	shutdownErr     error
+	mu               sync.Mutex
+	client           *lease.Client
+	max              uint32
+	active           uint32
+	acquiring        uint32
+	closed           bool
+	entries          []owned
+	acquisitionsDone chan struct{}
+	shutdownStarted  bool
+	shutdownDone     chan struct{}
+	shutdownErr      error
 }
 
 // New constructs a lifecycle manager with a hard handle bound.
@@ -35,8 +35,9 @@ func New(client *lease.Client, maxHandles uint32) (*Manager, error) {
 	if client == nil || maxHandles == 0 {
 		return nil, lease.Wrap(lease.ErrInvalidState, "service manager")
 	}
-	manager := &Manager{client: client, max: maxHandles}
-	manager.acquisitions = sync.NewCond(&manager.mu)
+	acquisitionsDone := make(chan struct{})
+	close(acquisitionsDone)
+	manager := &Manager{client: client, max: maxHandles, acquisitionsDone: acquisitionsDone}
 	return manager, nil
 }
 
@@ -59,6 +60,9 @@ func (manager *Manager) Acquire(
 		return nil, lease.Wrap(lease.ErrBackendUnavailable, "service capacity")
 	}
 	manager.active++
+	if manager.acquiring == 0 {
+		manager.acquisitionsDone = make(chan struct{})
+	}
 	manager.acquiring++
 	manager.mu.Unlock()
 
@@ -77,11 +81,10 @@ func (manager *Manager) Acquire(
 		}
 	}
 	manager.mu.Lock()
-	manager.acquiring--
 	if manager.closed {
 		manager.entries = append(manager.entries, owned{handle: handle, managed: managed})
+		manager.finishAcquisitionLocked()
 		done := manager.shutdownDone
-		manager.acquisitions.Broadcast()
 		manager.mu.Unlock()
 		select {
 		case <-done:
@@ -98,7 +101,7 @@ func (manager *Manager) Acquire(
 		}
 	}
 	manager.entries = append(manager.entries, owned{handle: handle, managed: managed})
-	manager.acquisitions.Broadcast()
+	manager.finishAcquisitionLocked()
 	manager.mu.Unlock()
 	return handle, nil
 }
@@ -139,9 +142,11 @@ func (manager *Manager) Shutdown(ctx context.Context) error {
 
 func (manager *Manager) cleanup() {
 	manager.mu.Lock()
-	for manager.acquiring > 0 {
-		manager.acquisitions.Wait()
-	}
+	acquisitionsDone := manager.acquisitionsDone
+	manager.mu.Unlock()
+	<-acquisitionsDone
+
+	manager.mu.Lock()
 	entries := append([]owned(nil), manager.entries...)
 	manager.mu.Unlock()
 
@@ -172,10 +177,16 @@ func (manager *Manager) Hooks() serviceintegration.Hooks {
 
 func (manager *Manager) releaseReservation() {
 	manager.mu.Lock()
-	manager.acquiring--
 	manager.active--
-	manager.acquisitions.Broadcast()
+	manager.finishAcquisitionLocked()
 	manager.mu.Unlock()
+}
+
+func (manager *Manager) finishAcquisitionLocked() {
+	manager.acquiring--
+	if manager.acquiring == 0 {
+		close(manager.acquisitionsDone)
+	}
 }
 
 func operationContextError(ctx context.Context, operation string) error {

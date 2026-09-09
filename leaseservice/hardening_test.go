@@ -374,6 +374,53 @@ func TestAcquireRacingShutdownReleasesReservation(t *testing.T) {
 	}
 }
 
+func TestAcquireRacingShutdownReceivesSharedTerminalResult(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now()
+	backend := &serviceBackend{
+		now: now, entered: make(chan struct{}), proceed: make(chan struct{}),
+		releaseEntered: make(chan struct{}), releaseProceed: make(chan struct{}),
+	}
+	client, _ := lease.NewClient(backend, lease.ClientOptions{Clock: serviceClock{now: now}})
+	manager, _ := New(client, 1)
+	key, _ := lease.NewKey("service", "race-terminal")
+	policy, _ := lease.NewPolicy(lease.PolicyOptions{TTL: time.Second, MaxAttempts: 1})
+	result := make(chan error, 1)
+	go func() {
+		_, err := manager.Acquire(context.Background(), key, policy)
+		result <- err
+	}()
+	select {
+	case <-backend.entered:
+	case err := <-result:
+		t.Fatalf("Acquire() returned before backend entry: %v", err)
+	}
+	canceled, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := manager.Shutdown(canceled); !errors.Is(err, lease.ErrCanceled) {
+		t.Fatalf("first Shutdown() error = %v", err)
+	}
+	shutdown := make(chan error, 1)
+	go func() { shutdown <- manager.Shutdown(context.Background()) }()
+	close(backend.proceed)
+	select {
+	case <-backend.releaseEntered:
+	case <-time.After(time.Second):
+		t.Fatal("shared shutdown cleanup did not release racing acquisition")
+	}
+	close(backend.releaseProceed)
+	if err := <-shutdown; err != nil {
+		t.Fatalf("Shutdown() error = %v", err)
+	}
+	if err := <-result; !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("Acquire(racing shutdown) error = %v", err)
+	}
+	if manager.Active() != 0 {
+		t.Fatalf("Active() = %d", manager.Active())
+	}
+}
+
 func TestManagedStartFailureRetainsAccountingUntilRollbackReleaseFinishes(t *testing.T) {
 	t.Parallel()
 
