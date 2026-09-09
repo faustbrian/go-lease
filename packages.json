@@ -16,6 +16,42 @@
     },
     {
       "module_directory": ".",
+      "directory": "adapters/queue",
+      "name": "leasequeue",
+      "import_path": "github.com/faustbrian/go-lease/adapters/queue",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "adapters/scheduler",
+      "name": "leasescheduler",
+      "import_path": "github.com/faustbrian/go-lease/adapters/scheduler",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "adapters/service",
+      "name": "leaseservice",
+      "import_path": "github.com/faustbrian/go-lease/adapters/service",
+      "kind": "public",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
       "directory": "examples/postgres",
       "name": "main",
       "import_path": "github.com/faustbrian/go-lease/examples/postgres",

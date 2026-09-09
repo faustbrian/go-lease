@@ -31,6 +31,12 @@ func Open(ctx context.Context, client valkeygo.Client, prefix string) (*Store, e
 	if client == nil {
 		return nil, lease.Wrap(lease.ErrInvalidState, "nil valkey client")
 	}
+	if ctx == nil {
+		return nil, lease.Wrap(lease.ErrInvalidState, "valkey context")
+	}
+	if ctx.Err() != nil {
+		return nil, errors.Join(lease.Wrap(lease.ErrCanceled, "valkey context"), ctx.Err())
+	}
 	executor := newNativeExecutor(client)
 	if err := executor.Check(ctx); err != nil {
 		return nil, err

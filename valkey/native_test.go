@@ -76,6 +76,20 @@ func TestOpenChecksValkeyVersionAndEviction(t *testing.T) {
 	if _, err := Open(context.Background(), nil, "lease"); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("Open(nil) error = %v", err)
 	}
+	if _, err := Open(nil, nil, "lease"); !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("Open(nil context, nil client) error = %v", err)
+	}
+	client := valkeymock.NewClient(gomock.NewController(t))
+	if _, err := Open(nil, client, "lease"); !errors.Is(err, lease.ErrInvalidState) {
+		t.Fatalf("Open(nil context) error = %v", err)
+	}
+	canceled, cancel := context.WithCancel(context.Background())
+	cancel()
+	client = valkeymock.NewClient(gomock.NewController(t))
+	if _, err := Open(canceled, client, "lease"); !errors.Is(err, lease.ErrCanceled) ||
+		!errors.Is(err, context.Canceled) {
+		t.Fatalf("Open(canceled context) error = %v", err)
+	}
 
 	tests := []struct {
 		name    string
