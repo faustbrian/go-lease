@@ -192,6 +192,7 @@ func TestManagerRejectsInvalidContextsBeforeStateOrBackend(t *testing.T) {
 	key, _ := lease.NewKey("service", "context")
 	policy, _ := lease.NewPolicy(lease.PolicyOptions{TTL: time.Second, MaxAttempts: 1})
 
+	//nolint:staticcheck // Nil is an intentional public contract input.
 	if _, err := manager.Acquire(nil, key, policy); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("Acquire(nil) error = %v", err)
 	}
@@ -205,6 +206,7 @@ func TestManagerRejectsInvalidContextsBeforeStateOrBackend(t *testing.T) {
 		t.Fatalf("invalid context changed manager state: active=%d owners=%d", manager.Active(), owners.calls)
 	}
 
+	//nolint:staticcheck // Nil is an intentional public contract input.
 	if err := manager.Shutdown(nil); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("Shutdown(nil) error = %v", err)
 	}

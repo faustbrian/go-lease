@@ -76,10 +76,12 @@ func TestOpenChecksValkeyVersionAndEviction(t *testing.T) {
 	if _, err := Open(context.Background(), nil, "lease"); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("Open(nil) error = %v", err)
 	}
+	//nolint:staticcheck // Nil context and client precedence is the contract.
 	if _, err := Open(nil, nil, "lease"); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("Open(nil context, nil client) error = %v", err)
 	}
 	client := valkeymock.NewClient(gomock.NewController(t))
+	//nolint:staticcheck // Nil context is an intentional public contract input.
 	if _, err := Open(nil, client, "lease"); !errors.Is(err, lease.ErrInvalidState) {
 		t.Fatalf("Open(nil context) error = %v", err)
 	}
