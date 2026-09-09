@@ -65,6 +65,13 @@ func (backend *serviceBackend) Renew(
 
 type serviceRequestContextKey struct{}
 
+func serviceTestContext(t *testing.T) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	t.Cleanup(cancel)
+	return ctx
+}
+
 func TestManagedRenewalDoesNotRetainAcquireRequestContext(t *testing.T) {
 	t.Parallel()
 
@@ -93,7 +100,7 @@ func TestManagedRenewalDoesNotRetainAcquireRequestContext(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("managed renewal did not run")
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	if err := manager.Shutdown(serviceTestContext(t)); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 }
@@ -164,7 +171,7 @@ func TestShutdownStopsManagedRenewalBeforeRelease(t *testing.T) {
 	if _, err := manager.Acquire(context.Background(), key, policy); err != nil {
 		t.Fatalf("Acquire() error = %v", err)
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	if err := manager.Shutdown(serviceTestContext(t)); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 	if backend.releaseBeforeStop {
@@ -204,7 +211,7 @@ func TestManagerRejectsInvalidContextsBeforeStateOrBackend(t *testing.T) {
 	if _, err := manager.Acquire(context.Background(), key, policy); err != nil {
 		t.Fatalf("Acquire() after invalid shutdown error = %v", err)
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	if err := manager.Shutdown(serviceTestContext(t)); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 }
@@ -256,12 +263,12 @@ func TestShutdownUsesOneCallerIndependentCleanupAndCachesResult(t *testing.T) {
 	}
 
 	second := make(chan error, 1)
-	go func() { second <- manager.Shutdown(context.Background()) }()
+	go func() { second <- manager.Shutdown(serviceTestContext(t)) }()
 	close(backend.releaseProceed)
 	if err := <-second; !errors.Is(err, releaseErr) {
 		t.Fatalf("second Shutdown() error = %v", err)
 	}
-	if err := manager.Shutdown(context.Background()); !errors.Is(err, releaseErr) {
+	if err := manager.Shutdown(serviceTestContext(t)); !errors.Is(err, releaseErr) {
 		t.Fatalf("repeated Shutdown() error = %v", err)
 	}
 	if manager.Active() != 0 {
@@ -291,7 +298,7 @@ func TestManagerValidationFailureAndClosedState(t *testing.T) {
 	if manager.Active() != 0 {
 		t.Fatalf("Active() after failure = %d", manager.Active())
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	if err := manager.Shutdown(serviceTestContext(t)); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 	if _, err := manager.Acquire(context.Background(), key, policy); !errors.Is(err, lease.ErrInvalidState) {
@@ -338,7 +345,7 @@ func TestAcquireRacingShutdownReleasesReservation(t *testing.T) {
 		t.Fatalf("first Shutdown() error = %v", err)
 	}
 	shutdown := make(chan error, 1)
-	go func() { shutdown <- manager.Shutdown(context.Background()) }()
+	go func() { shutdown <- manager.Shutdown(serviceTestContext(t)) }()
 	close(backend.proceed)
 	select {
 	case <-backend.releaseEntered:
@@ -402,7 +409,7 @@ func TestAcquireRacingShutdownReceivesSharedTerminalResult(t *testing.T) {
 		t.Fatalf("first Shutdown() error = %v", err)
 	}
 	shutdown := make(chan error, 1)
-	go func() { shutdown <- manager.Shutdown(context.Background()) }()
+	go func() { shutdown <- manager.Shutdown(serviceTestContext(t)) }()
 	close(backend.proceed)
 	select {
 	case <-backend.releaseEntered:
@@ -500,7 +507,7 @@ func TestManagedStartAndShutdownFailuresAreReported(t *testing.T) {
 	if manager.Active() != 1 {
 		t.Fatalf("Active() after plain acquisition = %d", manager.Active())
 	}
-	if err := manager.Shutdown(context.Background()); !errors.Is(err, lease.ErrAmbiguousOutcome) {
+	if err := manager.Shutdown(serviceTestContext(t)); !errors.Is(err, lease.ErrAmbiguousOutcome) {
 		t.Fatalf("Shutdown(release failure) error = %v", err)
 	}
 }
@@ -522,7 +529,7 @@ func TestManagedAcquireAndShutdownStopRenewal(t *testing.T) {
 	if manager.Active() != 1 {
 		t.Fatalf("Active() after managed acquisition = %d", manager.Active())
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	if err := manager.Shutdown(serviceTestContext(t)); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 }
@@ -555,7 +562,7 @@ func TestManagedRenewalOutlivesAcquireContext(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("managed renewal stopped with acquisition context")
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	if err := manager.Shutdown(serviceTestContext(t)); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 }
