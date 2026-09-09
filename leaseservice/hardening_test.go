@@ -537,7 +537,7 @@ func TestManagedRenewalOutlivesAcquireContext(t *testing.T) {
 	t.Parallel()
 
 	now := time.Now()
-	trigger := make(chan struct{})
+	trigger := make(chan struct{}, 1)
 	backend := &serviceBackend{now: now, renewed: make(chan struct{}, 1)}
 	client, _ := lease.NewClient(backend, lease.ClientOptions{
 		Clock: serviceClock{now}, Sleeper: serviceSleeper{trigger: trigger},
