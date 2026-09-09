@@ -2,7 +2,22 @@
 
 ## Unreleased
 
+### Added
+
+- Add canonical queue, scheduler, and service integrations under
+  `adapters/*`.
+
+### Deprecated
+
+- Deprecate `leasequeue`, `leasescheduler`, and `leaseservice` in favor of the
+  canonical adapter paths while retaining source-compatible facades.
+
 ### Changed
+
+- Reject nil and pre-canceled acquisition contexts before owner, capacity,
+  clock, or backend work, and make Valkey inspection follow the same boundary.
+- Make service-manager shutdown one caller-independent ordered cleanup with
+  independently bounded waiters and a cached terminal result.
 
 - Adopt schema-v2 cohesion metadata and a local cohesion gate for the public
   module, backed by the checksum-verified `go-library-tools` v1.4.0 release.

@@ -1,47 +1,47 @@
-// Package leasescheduler provides on-one-server and non-overlap execution.
+// Package leasescheduler is the legacy facade for the canonical scheduler adapter.
+//
+// Deprecated: use github.com/faustbrian/go-lease/adapters/scheduler.
 package leasescheduler
 
 import (
 	"context"
 
 	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/internal/guard"
+	adapter "github.com/faustbrian/go-lease/adapters/scheduler"
 )
 
 // Task performs one fenced scheduled occurrence.
+//
+// Deprecated: use scheduler.Task.
 type Task func(context.Context, lease.Token) error
 
-// Coordinator applies one immutable policy to scheduled ownership.
-type Coordinator struct {
-	client *lease.Client
-	policy lease.Policy
-}
+// Coordinator preserves the released scheduler type while delegating behavior
+// to the canonical adapter.
+//
+// Deprecated: use scheduler.Coordinator.
+type Coordinator struct{ inner *adapter.Coordinator }
 
-// New constructs a scheduler lease coordinator.
+// New delegates to the canonical scheduler adapter.
+//
+// Deprecated: use scheduler.New.
 func New(client *lease.Client, policy lease.Policy) (*Coordinator, error) {
-	if client == nil {
-		return nil, lease.Wrap(lease.ErrInvalidState, "scheduler coordinator")
+	coordinator, err := adapter.New(client, policy)
+	if err != nil {
+		return nil, err
 	}
-	return &Coordinator{client: client, policy: policy}, nil
+	return &Coordinator{inner: coordinator}, nil
 }
 
-// OnOneServer runs one occurrence under distributed fenced ownership.
-func (coordinator *Coordinator) OnOneServer(
-	ctx context.Context,
-	key lease.Key,
-	task Task,
-) error {
-	if task == nil {
-		return lease.Wrap(lease.ErrInvalidState, "scheduler task")
+// OnOneServer delegates to the canonical scheduler adapter.
+func (coordinator *Coordinator) OnOneServer(ctx context.Context, key lease.Key, task Task) error {
+	var successorTask adapter.Task
+	if task != nil {
+		successorTask = func(ctx context.Context, token lease.Token) error { return task(ctx, token) }
 	}
-	return guard.Run(ctx, coordinator.client, coordinator.policy, key, task)
+	return coordinator.inner.OnOneServer(ctx, key, successorTask)
 }
 
-// WithoutOverlapping is an explicit semantic alias for OnOneServer.
-func (coordinator *Coordinator) WithoutOverlapping(
-	ctx context.Context,
-	key lease.Key,
-	task Task,
-) error {
+// WithoutOverlapping delegates to OnOneServer.
+func (coordinator *Coordinator) WithoutOverlapping(ctx context.Context, key lease.Key, task Task) error {
 	return coordinator.OnOneServer(ctx, key, task)
 }

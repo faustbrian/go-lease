@@ -3,6 +3,7 @@ package leasescheduler_test
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -11,6 +12,17 @@ import (
 	"github.com/faustbrian/go-lease/leasetest"
 	"github.com/faustbrian/go-lease/memory"
 )
+
+func TestLegacyNamedTypesRetainPackageIdentity(t *testing.T) {
+	t.Parallel()
+
+	if got, want := reflect.TypeOf((*leasescheduler.Coordinator)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leasescheduler"; got != want {
+		t.Fatalf("Coordinator package = %q, want %q", got, want)
+	}
+	if got, want := reflect.TypeOf((*leasescheduler.Task)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leasescheduler"; got != want {
+		t.Fatalf("Task package = %q, want %q", got, want)
+	}
+}
 
 func TestOnOneServerProvidesFenceAndReleases(t *testing.T) {
 	t.Parallel()

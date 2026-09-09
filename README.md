@@ -56,7 +56,10 @@ the returned error. No acquisition order or starvation guarantee is provided.
 - `memory`: deterministic process-local reference backend, never distributed
 - `valkey`: native `valkey-go` backend using backend-time Lua scripts
 - `postgres`: native `pgx` backend and `migrations` schema
-- `leasequeue`, `leasescheduler`, `leaseservice`: lifecycle integrations
+- `adapters/queue`, `adapters/scheduler`, `adapters/service`: canonical
+  queue, scheduler, and service lifecycle integrations
+- `leasequeue`, `leasescheduler`, `leaseservice`: deprecated compatibility
+  facades for the canonical adapter paths
 - `leasetest`: deterministic clock and cross-backend conformance suite
 
 See the [documentation index](docs/README.md), [security policy](SECURITY.md),

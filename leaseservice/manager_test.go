@@ -3,6 +3,7 @@ package leaseservice_test
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 	"time"
 
@@ -11,6 +12,14 @@ import (
 	"github.com/faustbrian/go-lease/leasetest"
 	"github.com/faustbrian/go-lease/memory"
 )
+
+func TestLegacyManagerRetainsPackageIdentity(t *testing.T) {
+	t.Parallel()
+
+	if got, want := reflect.TypeOf((*leaseservice.Manager)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leaseservice"; got != want {
+		t.Fatalf("Manager package = %q, want %q", got, want)
+	}
+}
 
 func TestManagerBoundsHandlesAndReleasesOnShutdown(t *testing.T) {
 	t.Parallel()
@@ -33,7 +42,9 @@ func TestManagerBoundsHandlesAndReleasesOnShutdown(t *testing.T) {
 	if _, err := manager.Acquire(context.Background(), second, policy); !errors.Is(err, lease.ErrBackendUnavailable) {
 		t.Fatalf("Acquire(over capacity) error = %v", err)
 	}
-	if err := manager.Shutdown(context.Background()); err != nil {
+	shutdownContext, cancelShutdown := context.WithTimeout(context.Background(), time.Second)
+	t.Cleanup(cancelShutdown)
+	if err := manager.Shutdown(shutdownContext); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
 	}
 	if _, err := client.TryAcquire(context.Background(), first, policy); err != nil {

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -93,6 +94,9 @@ func (client *Client) TryAcquire(
 	key Key,
 	policy Policy,
 ) (*Handle, error) {
+	if err := acquisitionContextError(ctx); err != nil {
+		return nil, err
+	}
 	owner, err := client.owners.NewOwner()
 	if err != nil || owner == "" || len(owner) > 128 {
 		return nil, Wrap(ErrBackendUnavailable, "owner generation")
@@ -120,6 +124,9 @@ func (client *Client) Acquire(
 	key Key,
 	policy Policy,
 ) (*Handle, error) {
+	if err := acquisitionContextError(ctx); err != nil {
+		return nil, err
+	}
 	select {
 	case client.waiters <- struct{}{}:
 		defer func() { <-client.waiters }()
@@ -171,6 +178,16 @@ func (client *Client) Acquire(
 			return nil, Wrap(ErrCanceled, "acquire")
 		}
 	}
+}
+
+func acquisitionContextError(ctx context.Context) error {
+	if ctx == nil {
+		return Wrap(ErrInvalidState, "acquire context")
+	}
+	if ctx.Err() != nil {
+		return errors.Join(Wrap(ErrCanceled, "acquire"), ctx.Err())
+	}
+	return nil
 }
 
 func isContention(err error) bool { return err != nil && errorIs(err, ErrContended) }

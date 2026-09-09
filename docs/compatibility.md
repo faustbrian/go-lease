@@ -16,3 +16,8 @@ removed.
 
 An incompatible key derivation, prefix, schema, or script response must use a
 new coordinated namespace/version. Never silently split owners across formats.
+
+The canonical integration paths are `adapters/queue`, `adapters/scheduler`, and
+`adapters/service`. The v1 `leasequeue`, `leasescheduler`, and `leaseservice`
+paths remain deprecated source-compatible facades for at least 180 days and two
+stable minor releases after the canonical paths become publicly consumable.

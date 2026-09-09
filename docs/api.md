@@ -16,6 +16,10 @@ still uses `State` or `Validate`. `AcquiredAt` is backend-clock inspection
 data; `Deadline` is the conservative local admission bound and is safe across
 backend/client clock skew.
 
+Client acquisition rejects a literal nil context as `ErrInvalidState` and a
+pre-canceled context as `ErrCanceled` before owner generation, capacity
+reservation, time-source use, or backend work.
+
 Stable errors are `ErrContended`, `ErrTimeout`, `ErrCanceled`, `ErrLost`,
 `ErrStaleOwner`, `ErrBackendUnavailable`, `ErrInvalidState`, and
 `ErrAmbiguousOutcome`. Classify with `errors.Is`; do not parse text.
@@ -25,11 +29,18 @@ never emits owner or raw key. Observer panics are contained and callbacks run
 after the backend operation without package locks held.
 
 `valkey.New` trusts caller configuration; `valkey.Open` additionally verifies
-Valkey 9 or newer and `noeviction` before returning a backend.
+Valkey 9 or newer and `noeviction` before returning a backend. `Open` validates
+the client first, then rejects nil or pre-canceled contexts before issuing a
+Valkey command.
 `valkey.Store.Guard` validates an owned record and returns a value implementing
 the cache module's ownership-guard contract. Constructing a guard performs no
 backend call; the protected writer must compare its storage key, owner, and
 token atomically at publication time.
+
+Queue, scheduler, and service integrations use `adapters/queue`,
+`adapters/scheduler`, and `adapters/service`. The released `leasequeue`,
+`leasescheduler`, and `leaseservice` paths are deprecated source-compatible
+facades.
 
 All exported declarations are also available through `go doc` and protected by
 `make api-compat`.
