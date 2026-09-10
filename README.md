@@ -7,10 +7,10 @@
 [![Documentation](https://img.shields.io/badge/docs-checked_in_CI-blue)](docs/)
 [![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-lease.svg)](https://pkg.go.dev/github.com/faustbrian/go-lease)
 [![Release](https://img.shields.io/github/v/release/faustbrian/go-lease?sort=semver)](https://github.com/faustbrian/go-lease/releases)
-[![Go](https://img.shields.io/badge/go-1.26.6-00ADD8?logo=go)](https://go.dev/)
+[![Go](https://img.shields.io/badge/go-1.27.0-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-`lease` is a fenced, time-bounded distributed lease primitive for Go 1.26.6
+`lease` is a fenced, time-bounded distributed lease primitive for Go 1.27.0
 and newer. It provides explicit owners, backend-anchored expiry, renewal,
 validation, compare-and-release, and monotonically increasing fencing tokens
 for native Valkey and PostgreSQL backends.
