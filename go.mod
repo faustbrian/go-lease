@@ -7,8 +7,8 @@ require (
 	github.com/faustbrian/go-queue v1.0.0
 	github.com/faustbrian/go-service v1.0.0
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/valkey-io/valkey-go v1.0.76
-	github.com/valkey-io/valkey-go/mock v1.0.76
+	github.com/valkey-io/valkey-go v1.0.77
+	github.com/valkey-io/valkey-go/mock v1.0.77
 	go.uber.org/mock v0.6.0
 )
 
