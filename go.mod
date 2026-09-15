@@ -3,7 +3,7 @@ module github.com/faustbrian/go-lease
 go 1.27.0
 
 require (
-	github.com/faustbrian/go-migrations v1.0.0
+	github.com/faustbrian/go-migrations v1.1.0
 	github.com/faustbrian/go-queue v1.0.0
 	github.com/faustbrian/go-service v1.0.0
 	github.com/jackc/pgx/v5 v5.10.0
