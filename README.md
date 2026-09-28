@@ -24,7 +24,7 @@ with publication.
 ## Five-minute start
 
 For v2, import `github.com/faustbrian/go-lease/v2` and add `/v2` before backend
-or adapter package names. Published v1 releases retain the unsuffixed path.
+or adapter package names. Published v1 releases retain the path without `/v2`.
 
 Choose a backend guide:
 
