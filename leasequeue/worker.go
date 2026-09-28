@@ -1,13 +1,13 @@
 // Package leasequeue is the legacy facade for the canonical queue adapter.
 //
-// Deprecated: use github.com/faustbrian/go-lease/adapters/queue.
+// Deprecated: use github.com/faustbrian/go-lease/v2/adapters/queue.
 package leasequeue
 
 import (
 	"context"
 
-	lease "github.com/faustbrian/go-lease"
-	adapter "github.com/faustbrian/go-lease/adapters/queue"
+	lease "github.com/faustbrian/go-lease/v2"
+	adapter "github.com/faustbrian/go-lease/v2/adapters/queue"
 	"github.com/faustbrian/go-queue/core"
 )
 

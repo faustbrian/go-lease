@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/leasetest"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/leasetest"
 )
 
 func TestOptionsCapacityAndOverflowAreBounded(t *testing.T) {

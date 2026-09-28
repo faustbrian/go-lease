@@ -1,13 +1,13 @@
 // Package leasescheduler is the legacy facade for the canonical scheduler adapter.
 //
-// Deprecated: use github.com/faustbrian/go-lease/adapters/scheduler.
+// Deprecated: use github.com/faustbrian/go-lease/v2/adapters/scheduler.
 package leasescheduler
 
 import (
 	"context"
 
-	lease "github.com/faustbrian/go-lease"
-	adapter "github.com/faustbrian/go-lease/adapters/scheduler"
+	lease "github.com/faustbrian/go-lease/v2"
+	adapter "github.com/faustbrian/go-lease/v2/adapters/scheduler"
 )
 
 // Task performs one fenced scheduled occurrence.

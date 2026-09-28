@@ -7,16 +7,16 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/leaseservice"
-	"github.com/faustbrian/go-lease/leasetest"
-	"github.com/faustbrian/go-lease/memory"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/leaseservice"
+	"github.com/faustbrian/go-lease/v2/leasetest"
+	"github.com/faustbrian/go-lease/v2/memory"
 )
 
 func TestLegacyManagerRetainsPackageIdentity(t *testing.T) {
 	t.Parallel()
 
-	if got, want := reflect.TypeOf((*leaseservice.Manager)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leaseservice"; got != want {
+	if got, want := reflect.TypeOf((*leaseservice.Manager)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leaseservice"; got != want {
 		t.Fatalf("Manager package = %q, want %q", got, want)
 	}
 }

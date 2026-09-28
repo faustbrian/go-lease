@@ -7,7 +7,8 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
+	lease "github.com/faustbrian/go-lease/v2"
+	migrations "github.com/faustbrian/go-migrations/v2"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -167,7 +168,15 @@ func TestMigrationOwnsFenceAndLeaseTables(t *testing.T) {
 		!strings.Contains(migration.Up, "expires_at") {
 		t.Fatalf("migration does not own required schema: %s", migration.Up)
 	}
-	if _, err := GoMigration(); err != nil {
+	canonical, err := GoMigration()
+	if err != nil {
 		t.Fatalf("GoMigration() error = %v", err)
+	}
+	if canonical.Version() != migrations.Version(migration.Version) ||
+		canonical.Name() != migration.Name ||
+		canonical.TransactionMode() != migrations.TransactionModeDefault ||
+		canonical.UpSQL() != migration.Up ||
+		canonical.DownSQL() != migration.Down {
+		t.Fatal("GoMigration() changed the lease schema contract")
 	}
 }

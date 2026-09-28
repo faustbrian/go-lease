@@ -14,6 +14,9 @@
 
 ### Changed
 
+- Move to the `go-lease/v2` module path and return the PostgreSQL schema as a
+  `go-migrations/v2` migration. Callers must update lease imports; callers
+  composing migrations must also adopt the migrations v2 type.
 - Reject nil and pre-canceled acquisition contexts before owner, capacity,
   clock, or backend work, and make Valkey inspection follow the same boundary.
 - Make service-manager shutdown one caller-independent ordered cleanup with

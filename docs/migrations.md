@@ -1,6 +1,6 @@
 # PostgreSQL migrations
 
-`postgres.GoMigration` returns the immutable `migrations` migration.
+`postgres.GoMigration` returns an immutable `go-migrations/v2` migration.
 Migration 1 creates `lease_fences`, `lease_records`, expiry and cleanup indexes,
 checks, and the foreign key between lease rows and counters.
 

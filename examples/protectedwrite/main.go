@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	lease "github.com/faustbrian/go-lease"
+	lease "github.com/faustbrian/go-lease/v2"
 )
 
 type resource struct {

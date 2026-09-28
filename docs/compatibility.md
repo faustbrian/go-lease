@@ -1,6 +1,6 @@
 # Compatibility and rolling versions
 
-The minimum Go version is 1.27.0. The v1 API baseline is checked by
+The minimum Go version is 1.27.0. The v2 API baseline is checked by
 `make api-compat`. PostgreSQL versions 14 through 18 and Valkey 9 are exercised
 by the integration matrix.
 
@@ -19,5 +19,9 @@ new coordinated namespace/version. Never silently split owners across formats.
 
 The canonical integration paths are `adapters/queue`, `adapters/scheduler`, and
 `adapters/service`. The v1 `leasequeue`, `leasescheduler`, and `leaseservice`
-paths remain deprecated source-compatible facades for at least 180 days and two
-stable minor releases after the canonical paths become publicly consumable.
+paths remain deprecated source-compatible facades for at least 180 days and
+two stable minor releases after the canonical paths become publicly
+consumable; they are retained within the v2 module too. V1 consumers retain
+their published imports; adopting v2 requires adding `/v2` to lease imports
+and, for `postgres.GoMigration` consumers, migrating to the
+`go-migrations/v2` type.

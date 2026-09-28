@@ -5,7 +5,7 @@ import (
 	"context"
 	"errors"
 
-	lease "github.com/faustbrian/go-lease"
+	lease "github.com/faustbrian/go-lease/v2"
 )
 
 // Run acquires, optionally renews, cancels on loss, and explicitly releases.

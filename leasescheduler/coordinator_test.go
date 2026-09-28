@@ -7,19 +7,19 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/leasescheduler"
-	"github.com/faustbrian/go-lease/leasetest"
-	"github.com/faustbrian/go-lease/memory"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/leasescheduler"
+	"github.com/faustbrian/go-lease/v2/leasetest"
+	"github.com/faustbrian/go-lease/v2/memory"
 )
 
 func TestLegacyNamedTypesRetainPackageIdentity(t *testing.T) {
 	t.Parallel()
 
-	if got, want := reflect.TypeOf((*leasescheduler.Coordinator)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leasescheduler"; got != want {
+	if got, want := reflect.TypeOf((*leasescheduler.Coordinator)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasescheduler"; got != want {
 		t.Fatalf("Coordinator package = %q, want %q", got, want)
 	}
-	if got, want := reflect.TypeOf((*leasescheduler.Task)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leasescheduler"; got != want {
+	if got, want := reflect.TypeOf((*leasescheduler.Task)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasescheduler"; got != want {
 		t.Fatalf("Task package = %q, want %q", got, want)
 	}
 }

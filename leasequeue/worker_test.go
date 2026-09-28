@@ -7,20 +7,20 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/leasequeue"
-	"github.com/faustbrian/go-lease/leasetest"
-	"github.com/faustbrian/go-lease/memory"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/leasequeue"
+	"github.com/faustbrian/go-lease/v2/leasetest"
+	"github.com/faustbrian/go-lease/v2/memory"
 	"github.com/faustbrian/go-queue/core"
 )
 
 func TestLegacyNamedTypesRetainPackageIdentity(t *testing.T) {
 	t.Parallel()
 
-	if got, want := reflect.TypeOf((*leasequeue.Worker)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leasequeue"; got != want {
+	if got, want := reflect.TypeOf((*leasequeue.Worker)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasequeue"; got != want {
 		t.Fatalf("Worker package = %q, want %q", got, want)
 	}
-	if got, want := reflect.TypeOf((*leasequeue.KeyFunc)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/leasequeue"; got != want {
+	if got, want := reflect.TypeOf((*leasequeue.KeyFunc)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasequeue"; got != want {
 		t.Fatalf("KeyFunc package = %q, want %q", got, want)
 	}
 }

@@ -1,13 +1,13 @@
 // Package leaseservice is the legacy facade for the canonical service adapter.
 //
-// Deprecated: use github.com/faustbrian/go-lease/adapters/service.
+// Deprecated: use github.com/faustbrian/go-lease/v2/adapters/service.
 package leaseservice
 
 import (
 	"context"
 
-	lease "github.com/faustbrian/go-lease"
-	adapter "github.com/faustbrian/go-lease/adapters/service"
+	lease "github.com/faustbrian/go-lease/v2"
+	adapter "github.com/faustbrian/go-lease/v2/adapters/service"
 	serviceintegration "github.com/faustbrian/go-service/integration"
 )
 

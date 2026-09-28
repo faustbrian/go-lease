@@ -4,8 +4,8 @@ package leasescheduler
 import (
 	"context"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/internal/guard"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/internal/guard"
 )
 
 // Task performs one fenced scheduled occurrence.
