@@ -23,8 +23,8 @@ with publication.
 
 ## Five-minute start
 
-Import the module as `github.com/faustbrian/go-lease/v2` and add `/v2` before
-backend or adapter package names.
+For v2, import `github.com/faustbrian/go-lease/v2` and add `/v2` before backend
+or adapter package names. Published v1 releases retain the unsuffixed path.
 
 Choose a backend guide:
 
