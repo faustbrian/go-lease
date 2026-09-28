@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	leasevalkey "github.com/faustbrian/go-lease/valkey"
+	lease "github.com/faustbrian/go-lease/v2"
+	leasevalkey "github.com/faustbrian/go-lease/v2/valkey"
 	valkeygo "github.com/valkey-io/valkey-go"
 )
 

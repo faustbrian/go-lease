@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/internal/guard"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/internal/guard"
 	"github.com/faustbrian/go-queue/core"
 )
 

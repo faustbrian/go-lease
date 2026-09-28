@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
+	lease "github.com/faustbrian/go-lease/v2"
 )
 
 type fakeExecutor struct {

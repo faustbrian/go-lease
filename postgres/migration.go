@@ -1,6 +1,6 @@
 package postgres
 
-import migrations "github.com/faustbrian/go-migrations"
+import migrations "github.com/faustbrian/go-migrations/v2"
 
 // Migration describes the reversible PostgreSQL schema contract.
 type Migration struct {

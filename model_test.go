@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
+	lease "github.com/faustbrian/go-lease/v2"
 )
 
 func TestKeyIsBoundedAndNamespaced(t *testing.T) {

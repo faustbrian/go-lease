@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/leasetest"
-	"github.com/faustbrian/go-lease/memory"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/leasetest"
+	"github.com/faustbrian/go-lease/v2/memory"
 )
 
 type failingRenewBackend struct{ lease.Backend }

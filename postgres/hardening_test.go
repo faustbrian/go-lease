@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
+	lease "github.com/faustbrian/go-lease/v2"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

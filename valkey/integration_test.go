@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease"
-	"github.com/faustbrian/go-lease/leasetest"
-	leasevalkey "github.com/faustbrian/go-lease/valkey"
+	lease "github.com/faustbrian/go-lease/v2"
+	"github.com/faustbrian/go-lease/v2/leasetest"
+	leasevalkey "github.com/faustbrian/go-lease/v2/valkey"
 	valkeygo "github.com/valkey-io/valkey-go"
 )
 
