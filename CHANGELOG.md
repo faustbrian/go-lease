@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Changed
+
+- Adopt pgx 5.11 while preserving the PostgreSQL pool constructor, lease
+  schema, UTC record timestamps, and fencing contract.
+
+### Security
+
+- Use Go 1.27.2 and coherent compiler-compatible source tooling for CI,
+  retaining Go 1.27.0 as the public module minimum. Applications need a
+  patched-toolchain rebuild to receive standard-library security fixes.
+
 ## 2.0.0 - 2026-09-28
 
 ### Changed
