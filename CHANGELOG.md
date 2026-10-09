@@ -4,6 +4,9 @@
 
 ### Changed
 
+- Adopt Queue 1.1.2 while preserving lease-aware worker admission, fencing,
+  cancellation, and the canonical and legacy Queue adapter contracts.
+
 - Adopt pgx 5.11 while preserving the PostgreSQL pool constructor, lease
   schema, UTC record timestamps, and fencing contract.
 
