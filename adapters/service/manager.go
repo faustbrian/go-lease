@@ -125,7 +125,7 @@ func (manager *Manager) Shutdown(ctx context.Context) error {
 		manager.closed = true
 		manager.shutdownStarted = true
 		manager.shutdownDone = make(chan struct{})
-		//nolint:gosec // Cleanup intentionally outlives each request-scoped waiter.
+		// #nosec G118 -- Manager owns joined cleanup; releases retain policy timeouts.
 		go manager.cleanup()
 	}
 	done := manager.shutdownDone

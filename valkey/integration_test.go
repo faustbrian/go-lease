@@ -108,7 +108,7 @@ func TestLiveFenceContinuity(t *testing.T) {
 		ConnWriteTimeout: 500 * time.Millisecond,
 	}
 	if caFile := os.Getenv("VALKEY_CONTINUITY_CA_FILE"); caFile != "" {
-		// #nosec G304 G703 -- the disposable fault harness owns this CA path.
+		// #nosec G304,G703 -- the disposable fault harness owns this CA path.
 		certificate, err := os.ReadFile(caFile)
 		if err != nil {
 			t.Fatalf("read continuity CA: %v", err)
