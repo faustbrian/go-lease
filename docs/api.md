@@ -43,4 +43,4 @@ Queue, scheduler, and service integrations use `adapters/queue`,
 facades.
 
 All exported declarations are also available through `go doc` and protected by
-`make api-compat`.
+`golib api check --module .` through the pinned public verifier.

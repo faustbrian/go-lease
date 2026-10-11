@@ -1,8 +1,10 @@
 # Performance
 
-Run `make benchmark` for acquisition/release and renewal latency and allocation
-baselines. Run live backend benchmarks in the deployment region before setting
-TTL and margins; local memory results are not network predictions.
+The explicit full route, `make check-full`, retains the native `./...`
+benchmark operation at `100ms` with a `20m` timeout for acquisition/release
+and renewal latency and allocation baselines. Ordinary local gates do not run
+this campaign. Run live backend benchmarks in the deployment region before
+setting TTL and margins; local memory results are not network predictions.
 
 Contention serializes per key by design. Shard unrelated work across distinct
 keys, keep renewal well below backend capacity, and bound client pools. Valkey

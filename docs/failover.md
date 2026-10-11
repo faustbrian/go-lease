@@ -15,13 +15,18 @@ resource's maximum accepted fence, choose a new namespace/epoch, and restart
 consumers. Never silently reuse low tokens against a resource that remembers
 higher ones.
 
-`make backend-hardening` seeds a fixed key, snapshots each disposable backend,
-restarts it, and requires the next fence to increase. It then restores the
+The explicit manual full-risk command
+`make -f verification/package.mk backend-hardening` seeds a fixed key, snapshots
+each disposable backend, restarts it, and requires the next fence to increase. It then restores the
 older PostgreSQL dump and Valkey RDB and proves the next token does not exceed
 the protected-resource maximum, detecting rollback. Separate destructive
 table-reset and `FLUSHDB` phases must return token 1. Finally, physical
 PostgreSQL and Valkey replicas are observed streaming, promoted after their
 primaries stop, and required to issue strictly higher tokens.
+
+Run this Docker-backed campaign only in a disposable environment: its script
+owns fixed backend/container, volume and network names, including cleanup of
+those names. It is not part of the ordinary bounded local gate.
 
 The same fault gate restarts a persistent TLS-only Valkey instance with a new
 CA, server certificate, and password. Connections using either the old trust

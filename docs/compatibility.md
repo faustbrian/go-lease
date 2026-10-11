@@ -3,8 +3,8 @@
 The minimum Go version is 1.27.0; CI uses the patched Go 1.27.2 runtime.
 Applications should rebuild with the latest supported Go security patch.
 The v2 API baseline is checked by
-`make api-compat`. PostgreSQL versions 14 through 18 and Valkey 9 are exercised
-by the integration matrix.
+`golib api check --module .` through the pinned public verifier. PostgreSQL
+versions 14 through 18 and Valkey 9 are exercised by the integration matrix.
 
 Valkey script response shapes are versioned implicitly by the client release;
 rolling clients must retain the four-field record and one-field release
