@@ -35,7 +35,8 @@ const (
 	OutcomeStale Outcome = "stale"
 	// OutcomeCanceled reports caller cancellation.
 	OutcomeCanceled Outcome = "canceled"
-	// OutcomeUnavailable reports a definite backend failure.
+	// OutcomeUnavailable is the fallback for unavailable or unclassified errors;
+	// it does not prove remote mutation absence.
 	OutcomeUnavailable Outcome = "unavailable"
 	// OutcomeAmbiguous reports an uncertain remote mutation.
 	OutcomeAmbiguous Outcome = "ambiguous"
@@ -43,27 +44,44 @@ const (
 	OutcomeInvalid Outcome = "invalid"
 )
 
-// Event is safe for default logs, metric labels, and trace attributes.
+// Event is the observation value emitted with fixed vocabulary and hashed keys
+// by NewObservedBackend. Caller-constructed values are not validated or redacted;
+// string fields can contain arbitrary sensitive/unbounded text.
 type Event struct {
-	At        time.Time
+	// At is the decorator's injected local observation instant.
+	At time.Time
+	// Operation is the fixed backend-call label on package-emitted events.
 	Operation Operation
-	Outcome   Outcome
-	KeyHash   string
+	// Outcome is a classification, not proof of remote effect absence.
+	Outcome Outcome
+	// KeyHash is 32 hex characters from the first 128 SHA-256 bits on emitted events.
+	// It supports stable correlation but is unkeyed and guessable for known keys.
+	KeyHash string
 }
 
-// String returns a bounded redaction-safe representation.
+// String formats fields literally without validating, bounding or redacting
+// caller-supplied values. Package-emitted values use fixed labels and key hashes;
+// never treat arbitrary constructed Event fields as trusted diagnostic text.
 func (event Event) String() string {
 	return fmt.Sprintf("lease operation=%s outcome=%s key_hash=%s", event.Operation, event.Outcome, event.KeyHash)
 }
 
-// Observer consumes a redacted best-effort event outside backend locks. At
-// most one callback per observer runs at once; events are dropped while busy.
-type Observer interface{ Observe(Event) }
+// Observer consumes best-effort events asynchronously after the backend call.
+// Each registration permits one in-flight callback and drops events while busy;
+// registering the same object more than once or in multiple decorators can call
+// it concurrently. Callbacks must terminate: there is no context, join or closer,
+// and a blocked callback retains its goroutine/slot. Decorator calls recover panics.
+type Observer interface {
+	// Observe consumes one value; no ordered, durable or complete event delivery
+	// is guaranteed. Shared implementations own synchronization and diagnostics.
+	Observe(Event)
+}
 
 // ObserverFunc adapts a function to Observer.
 type ObserverFunc func(Event)
 
-// Observe invokes the adapted observer.
+// Observe directly invokes the function without nil/panic handling. The
+// NewObservedBackend callback boundary, not this adapter method, recovers panics.
 func (observer ObserverFunc) Observe(event Event) { observer(event) }
 
 type observedBackend struct {
@@ -77,7 +95,11 @@ type observerSlot struct {
 	active   chan struct{}
 }
 
-// NewObservedBackend decorates a backend with at most sixteen observers.
+// NewObservedBackend borrows backend, clock and one to sixteen observers,
+// snapshotting their registrations. Nil interfaces are rejected as ErrInvalidState;
+// typed-nil usability is not inspected. Backend results/errors remain unchanged.
+// Clock/hash work is synchronous; observer callbacks are nonblocking best effort.
+// No resources are closed or joined by this decoration; callbacks own termination.
 func NewObservedBackend(backend Backend, clock Clock, observers ...Observer) (Backend, error) {
 	if backend == nil || clock == nil || len(observers) == 0 || len(observers) > 16 {
 		return nil, Wrap(ErrInvalidState, "observation options")

@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// Per-operation hooks model response identity, clock skew and delayed completion,
+// not real persistence or service timing. Tests decide each transition explicitly.
 type stubBackend struct {
 	acquire func(context.Context, Key, string, time.Duration) (Record, error)
 	renew   func(context.Context, Record, time.Duration) (Record, error)

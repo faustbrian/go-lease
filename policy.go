@@ -24,20 +24,35 @@ const (
 	FailureFailClosed FailureBehavior = iota + 1
 )
 
-// PolicyOptions configures immutable acquisition and renewal behavior.
+// PolicyOptions configures immutable acquisition and renewal behavior. Zero
+// options are invalid; only OperationTimeout and FailureBehavior have defaults.
 type PolicyOptions struct {
-	TTL              time.Duration
-	Wait             time.Duration
-	Retry            time.Duration
-	Jitter           time.Duration
-	RenewEvery       time.Duration
-	SafetyMargin     time.Duration
-	MaxAttempts      uint32
+	// TTL is positive, at most MaxTTL. Native stores need at least one millisecond
+	// and truncate fractional milliseconds; prefer whole milliseconds.
+	TTL time.Duration
+	// Wait is 0..MaxWait for Acquire, with zero allowing only one attempt.
+	Wait time.Duration
+	// Retry is a nonnegative delay, required positive when Wait is positive.
+	Retry time.Duration
+	// Jitter is nonnegative, at most Retry, and added to the retry delay.
+	Jitter time.Duration
+	// RenewEvery is zero to disable managed renewal or positive and below TTL-SafetyMargin.
+	RenewEvery time.Duration
+	// SafetyMargin reserves nonnegative local budget, strictly below TTL. Choose
+	// it for latency, pauses and backend granularity; no remote clock check sets it.
+	SafetyMargin time.Duration
+	// MaxAttempts is 1..lease.MaxAttempts, counting all Acquire backend attempts.
+	MaxAttempts uint32
+	// OperationTimeout is positive and at most MaxOperationTimeout; zero defaults
+	// to min(TTL, 30 seconds). It requires backend context cooperation.
 	OperationTimeout time.Duration
-	FailureBehavior  FailureBehavior
+	// FailureBehavior defaults to FailureFailClosed, the only accepted behavior.
+	FailureBehavior FailureBehavior
 }
 
-// Policy is an immutable, bounded acquisition policy.
+// Policy is an immutable acquisition/renewal value safe to share. Construct it
+// with NewPolicy; its zero value is invalid and backends may impose finer input
+// restrictions, including native millisecond TTL granularity.
 type Policy struct {
 	ttl              time.Duration
 	wait             time.Duration
@@ -50,7 +65,9 @@ type Policy struct {
 	failureBehavior  FailureBehavior
 }
 
-// NewPolicy validates and copies acquisition options.
+// NewPolicy validates and copies options, applying only the documented timeout
+// and failure defaults. It rejects unsupported failure modes and invalid timing
+// relationships as ErrInvalidState, without invoking or inspecting a backend.
 func NewPolicy(options PolicyOptions) (Policy, error) {
 	if options.OperationTimeout == 0 {
 		options.OperationTimeout = min(options.TTL, 30*time.Second)

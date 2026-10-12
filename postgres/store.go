@@ -1,4 +1,10 @@
-// Package postgres provides native durable fenced leases for PostgreSQL.
+// Package postgres implements fenced leases through atomic PostgreSQL statements
+// and server time. New borrows a pgx pool; the caller installs SchemaMigration,
+// chooses trusted search_path/permissions and owns pool shutdown, authentication
+// and durable replication. Fence continuity depends on retained lease_fences
+// rows, including across restore/failover; the backend is not a consensus service.
+// TTL uses whole milliseconds, and no cgo is introduced by this adapter.
+// See docs/backend-guarantees.md and docs/quickstart-postgres.md.
 package postgres
 
 import (
@@ -13,6 +19,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Increment a retained fence row in the same statement transaction as attempted
+// owner installation. Contention may commit a consumed fence, so successful
+// tokens need not be consecutive; rollback reverts the increment (backend tests).
 const acquireSQL = `
 WITH next_fence AS (
     INSERT INTO lease_fences AS fences (key_digest, fencing_token)
@@ -95,10 +104,15 @@ type database interface {
 	QueryRow(context.Context, string, ...any) pgx.Row
 }
 
-// Store persists leases and fencing counters in PostgreSQL server time.
+// Store borrows a database/pool and performs statements in its configured schema
+// context. New does not check connectivity or install tables; its zero value is
+// unusable. Concurrent use follows the pool contract. Direct calls need nonnil
+// bounded contexts; the lease Client adds operation timeouts but cannot prevent
+// effects committed before cancellation or a lost response.
 type Store struct{ database database }
 
-// New constructs a PostgreSQL backend from a caller-owned pgx pool.
+// New rejects nil pool and borrows it without connecting, migrating, validating
+// search_path or changing transaction/durability settings. The creator closes it.
 func New(pool *pgxpool.Pool) (*Store, error) {
 	if pool == nil {
 		return nil, lease.Wrap(lease.ErrInvalidState, "nil postgres pool")
@@ -113,7 +127,11 @@ func newStore(database database) (*Store, error) {
 	return &Store{database: database}, nil
 }
 
-// TryAcquire atomically advances the durable fence and installs an owner.
+// TryAcquire atomically attempts owner installation with a retained signed-bigint
+// fence. Contention can consume a fence; successful tokens need not be consecutive.
+// TTL must be at least one millisecond and is truncated to whole milliseconds.
+// Query/response failure after a possible mutation is ErrAmbiguousOutcome; the
+// formatted native error hides driver text but traversal retains its cause.
 func (store *Store) TryAcquire(
 	ctx context.Context,
 	key lease.Key,
@@ -150,7 +168,10 @@ func (store *Store) TryAcquire(
 	}
 }
 
-// Renew atomically compares owner and token before extending backend expiry.
+// Renew compares active owner/token and server-clock expiry before extending
+// it; acquisition time/token remain unchanged. TTL must be at least 1ms and
+// fractional milliseconds are truncated. No matching row is ErrStaleOwner;
+// possible mutation/query failure is ambiguous, not automatically replayable.
 func (store *Store) Renew(
 	ctx context.Context,
 	owned lease.Record,
@@ -175,7 +196,10 @@ func (store *Store) Renew(
 	return record, nil
 }
 
-// Validate checks current owner, token, active state, and backend deadline.
+// Validate reads matching active owner/token before backend expiry, without
+// extending it or reserving a later effect. No row is ErrStaleOwner; read failures
+// are canceled/unavailable classifications, not a successful ownership proof.
+// Retained driver causes are programmatically accessible despite safe rendering.
 func (store *Store) Validate(ctx context.Context, owned lease.Record) (lease.Record, error) {
 	if err := validate(ctx, owned.Key, owned.Owner, owned.Token, time.Millisecond); err != nil {
 		return lease.Record{}, err
@@ -196,7 +220,10 @@ func (store *Store) Validate(ctx context.Context, owned lease.Record) (lease.Rec
 	return record, nil
 }
 
-// Release atomically deactivates only a matching owner and token.
+// Release deactivates matching active owner/token even after expiry. Same-owner
+// repeated release and a missing row succeed; a successor is ErrStaleOwner.
+// Fence rows are never removed. An ambiguous response can follow a committed
+// release, so lack of acknowledgement does not prove the lease remains active.
 func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 	if err := validate(ctx, owned.Key, owned.Owner, owned.Token, time.Millisecond); err != nil {
 		return err
@@ -220,7 +247,10 @@ func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 }
 
 // Cleanup removes a bounded batch of old inactive lease rows. Fence rows are
-// deliberately retained so cleanup cannot reset monotonic continuity.
+// deliberately retained so cleanup cannot reset monotonic continuity. Only
+// inactive rows older than one hour are selected; expired-but-active rows remain.
+// Batch is 1..10000, locks are skipped, and zero is an ordinary empty result.
+// A query failure can follow deletion and returns ambiguity rather than a count.
 func (store *Store) Cleanup(ctx context.Context, batch uint32) (uint32, error) {
 	if err := ctx.Err(); err != nil {
 		return 0, lease.Wrap(lease.ErrCanceled, "postgres cleanup")

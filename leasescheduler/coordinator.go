@@ -1,4 +1,8 @@
 // Package leasescheduler is the legacy facade for the canonical scheduler adapter.
+// It preserves distinct released named type identities, not type aliases.
+// Construction/operation contracts delegate to adapters/scheduler. No extra
+// service or cgo dependency is introduced; borrowed resources, cooperative
+// cancellation and resource-side fencing retain the canonical adapter limits.
 //
 // Deprecated: use github.com/faustbrian/go-lease/v2/adapters/scheduler.
 package leasescheduler

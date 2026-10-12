@@ -10,7 +10,7 @@
 | backend operation | 1 minute maximum |
 | concurrent client waiters | 1,000,000 configurable maximum; default 1,024 |
 | client managed renewers | 100,000 configurable maximum; default 1,024 |
-| observers | 16 per decorator; one in-flight callback each |
+| observers | 16 registrations per decorator; one in-flight callback per registration |
 | managed renewers per handle | one |
 | service handles | caller-supplied hard maximum |
 | PostgreSQL cleanup | 10,000 rows per call |
@@ -24,12 +24,16 @@ Acquisition wait is enforced by both the injected scheduling clock and an
 independent cancelable wall-clock deadline. A frozen or rolled-back injected
 clock therefore cannot extend a caller's configured `Wait` budget.
 
-Lease admission uses the same dual-clock principle. Its conservative local
+Lease admission uses the same dual-clock principle. Its local
 deadline begins before the acquisition or renewal request, subtracts the
 safety margin, and expires when either the injected clock or the independent
 process-monotonic clock reaches the bound. Backend/client clock skew and
-response latency therefore only shorten local admission; they cannot extend it.
+response latency do not move that local budget to a remote clock domain. This
+is not an unconditional remote-expiry guarantee: native PostgreSQL/Valkey TTLs
+truncate fractional milliseconds while the local budget uses the original TTL.
+Choose whole-millisecond TTLs and a suitable margin for that granularity.
 
-Observation delivery is best effort. A blocked observer occupies only its own
-single callback slot; later events for that observer are dropped, and lease
-operations never wait for exporter code.
+Observation delivery is best effort. A blocked callback occupies its registration's
+slot; later events there are dropped, and lease operations do not join exporter
+code. Registering the same observer twice gives two slots and permits concurrency.
+Clock/hash work remains synchronous, so injected clocks must return promptly.

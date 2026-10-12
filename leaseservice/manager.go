@@ -1,4 +1,8 @@
 // Package leaseservice is the legacy facade for the canonical service adapter.
+// It preserves distinct released named type identities, not type aliases.
+// Construction/operation contracts delegate to adapters/service. No extra
+// service or cgo dependency is introduced; borrowed resources, cooperative
+// cancellation and resource-side fencing retain the canonical adapter limits.
 //
 // Deprecated: use github.com/faustbrian/go-lease/v2/adapters/service.
 package leaseservice

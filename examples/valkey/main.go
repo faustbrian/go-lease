@@ -1,4 +1,7 @@
-// Command valkey demonstrates acquiring a Valkey-backed fenced lease.
+// Command valkey demonstrates one Valkey lease acquire/release on a local
+// caller-owned client. New does not perform Open's version/noeviction inspection;
+// deployment, ACL/TLS and counter durability remain operator responsibilities.
+// This live-server example adds no protected effect or failover qualification.
 package main
 
 import (

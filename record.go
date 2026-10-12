@@ -2,20 +2,30 @@ package lease
 
 import "time"
 
-// Token is a monotonically increasing fencing value for one key.
+// Token is a nonzero per-key fencing value within one backend continuity epoch.
+// It need not be consecutive, is not caller authentication, and only protects
+// effects when the resource atomically compares and retains accepted fences.
 type Token uint64
 
-// Record is the backend-authenticated ownership snapshot for a lease.
+// Record is a value snapshot returned by a backend, not an authenticated proof.
+// Callers can construct or alter one; backends compare its coordinates with
+// stored ownership. Timestamp fields alone do not establish current admission.
 type Record struct {
-	Key        Key
-	Owner      string
-	Token      Token
+	// Key is the namespaced identity supplied to acquisition.
+	Key Key
+	// Owner is the opaque comparison identity, not an authorization principal.
+	Owner string
+	// Token is the acquisition fence retained across renewal.
+	Token Token
+	// AcquiredAt is backend-clock acquisition time, retained across renewal.
 	AcquiredAt time.Time
-	ExpiresAt  time.Time
+	// ExpiresAt is backend-clock expiry, not a local wall/monotonic deadline.
+	ExpiresAt time.Time
 }
 
 // SafeDeadline returns the backend-clock expiry after reserving margin.
-// Handle.Deadline is the authoritative local admission bound.
+// It performs no validation; margin is applied literally. Handle.State checks
+// both local clock bounds rather than comparing backend timestamps directly.
 func (record Record) SafeDeadline(margin time.Duration) time.Time {
 	return record.ExpiresAt.Add(-margin)
 }

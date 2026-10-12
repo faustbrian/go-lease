@@ -7,6 +7,8 @@ import (
 	lease "github.com/faustbrian/go-lease/v2"
 )
 
+// FuzzKeyParsing treats arbitrary strings as key input; successful parses must
+// preserve exact bytes and the encoded length cap. It is not a namespace-auth oracle.
 func FuzzKeyParsing(f *testing.F) {
 	f.Add("queue/job")
 	f.Add("missing")
@@ -22,6 +24,8 @@ func FuzzKeyParsing(f *testing.F) {
 	})
 }
 
+// FuzzPolicyBounds explores signed duration/attempt inputs and verifies accepted
+// TTL/wait/attempt ranges, not backend granularity or remote deadline safety.
 func FuzzPolicyBounds(f *testing.F) {
 	f.Add(int64(time.Second), int64(0), int64(time.Millisecond), uint32(1))
 	f.Add(int64(-1), int64(0), int64(0), uint32(0))

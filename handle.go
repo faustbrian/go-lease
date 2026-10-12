@@ -41,7 +41,12 @@ func (state State) String() string {
 	}
 }
 
-// Handle is a concurrency-safe local view of remotely fenced ownership.
+// Handle is a concurrency-safe local admission view from a successful acquire.
+// State access synchronizes snapshots; overlapping Renew/Validate/Release calls
+// fail with ErrInvalidState rather than waiting for the in-flight operation.
+// Backend work runs outside the state lock. Expiry/loss/uncertainty closes local
+// admission permanently; resource-side fencing remains necessary for prior work.
+// Its zero value is unusable, and the caller owns release/managed-stop lifetimes.
 type Handle struct {
 	mu           sync.Mutex
 	backend      Backend
@@ -81,6 +86,9 @@ func newHandleAt(
 	started time.Time,
 	wallStarted time.Time,
 ) *Handle {
+	// Keep injected/local and real-time budgets separately. A frozen/rolled-back
+	// test clock cannot extend the real-time bound; remote timestamps do not set
+	// either bound. Native TTL truncation requires suitable policy granularity.
 	budget := policy.TTL() - policy.SafetyMargin()
 	return &Handle{
 		backend: backend, clock: clock, sleeper: sleeper,
@@ -104,9 +112,10 @@ func (handle *Handle) Token() Token {
 	return handle.record.Token
 }
 
-// Snapshot returns the latest backend-authenticated ownership record. It is
-// intended for composing protected adapters such as Valkey ownership guards;
-// callers must use State or Validate for local admission decisions.
+// Snapshot returns the latest copied backend record, even after local loss or
+// release. It is not an active-ownership/authentication proof. Use State/Validate
+// for admission and atomically check ownership at the protected-write boundary;
+// for example, Valkey Guard construction alone performs no remote check.
 func (handle *Handle) Snapshot() Record {
 	handle.mu.Lock()
 	defer handle.mu.Unlock()
@@ -120,7 +129,9 @@ func (handle *Handle) AcquiredAt() time.Time {
 	return handle.record.AcquiredAt
 }
 
-// Deadline returns the local safety deadline, not the raw backend expiry.
+// Deadline returns the injected-clock safety deadline, not raw backend expiry.
+// State also enforces a separate real-time deadline, so this accessor alone does
+// not establish remaining admission when an injected clock is frozen or skewed.
 func (handle *Handle) Deadline() time.Time {
 	handle.mu.Lock()
 	defer handle.mu.Unlock()
@@ -135,7 +146,12 @@ func (handle *Handle) State() State {
 	return handle.state
 }
 
-// Renew atomically compares owner and token before extending the deadline.
+// Renew requires active local admission and a nonnil context, then asks Backend
+// to compare ownership and renew. Matching success extends the local budget from
+// the operation start only if the old safety deadline has not already passed.
+// Remote success after that deadline still returns ErrLost; no local revival is
+// allowed. Stale errors mark loss, other errors uncertainty; neither proves that
+// a remote mutation did not happen. Concurrent operations are rejected.
 func (handle *Handle) Renew(ctx context.Context) error {
 	record, err := handle.beginActiveOperation()
 	if err != nil {
@@ -155,7 +171,10 @@ func (handle *Handle) Renew(ctx context.Context) error {
 	)
 }
 
-// Validate checks remote ownership and fails local admission closed on error.
+// Validate requires active local admission and a nonnil context, then checks
+// remote ownership without extending the local deadline. Response identity is
+// checked, backend errors fail admission closed, and expiry during the call
+// returns ErrLost even after remote success. It cannot reserve a later effect.
 func (handle *Handle) Validate(ctx context.Context) error {
 	record, err := handle.beginActiveOperation()
 	if err != nil {
@@ -170,7 +189,12 @@ func (handle *Handle) Validate(ctx context.Context) error {
 	return handle.finishActiveOperation(next, err, time.Time{}, time.Time{})
 }
 
-// Release idempotently compares owner and token before deactivation.
+// Release conditionally deactivates the recorded owner/token under a nonnil
+// operation context. An expired handle can still attempt release; lost/uncertain
+// handles and overlapping operations return ErrInvalidState without remote work.
+// After acknowledged release, repeats return nil without another backend call.
+// A failure cannot be treated as remote absence, and release does not join or
+// stop a managed renewer; the caller must stop renewal separately.
 func (handle *Handle) Release(ctx context.Context) error {
 	handle.mu.Lock()
 	if handle.state == StateReleased {
@@ -202,7 +226,11 @@ func (handle *Handle) Release(ctx context.Context) error {
 	return nil
 }
 
-// StartManaged starts at most one caller-owned renewal goroutine.
+// StartManaged starts one renewer bound to the supplied nonnil context. It
+// requires active admission, enabled RenewEvery, no overlapping operation/renewer
+// and an available shared managed slot. The caller owns Managed.Stop and release;
+// canceling this context stops renewal, not remote ownership. Sleeper/backend
+// cooperation is required, and there is no separate automatic expiry watcher.
 func (handle *Handle) StartManaged(ctx context.Context) (*Managed, error) {
 	handle.mu.Lock()
 	defer handle.mu.Unlock()
@@ -237,6 +265,8 @@ func (handle *Handle) beginActiveOperation() (Record, error) {
 	if handle.busy {
 		return Record{}, Wrap(ErrInvalidState, "handle operation")
 	}
+	// Reserve a single operation, then drop the lock before backend I/O. Returning
+	// quickly on overlap avoids blocking accessors or creating a second mutation.
 	handle.busy = true
 	return handle.record, nil
 }
@@ -250,6 +280,8 @@ func (handle *Handle) finishActiveOperation(
 	handle.mu.Lock()
 	defer handle.mu.Unlock()
 	handle.busy = false
+	// Expire against the old deadline before accepting a renewal response: a late
+	// remote success must not revive admission already lost during this call.
 	handle.expireLocked()
 	if err != nil {
 		handle.failLocked(err)

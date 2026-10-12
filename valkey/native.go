@@ -18,7 +18,9 @@ type nativeExecutor struct {
 }
 
 // New constructs a native Valkey backend. The client owns reconnect, ACL,
-// TLS, routing, and timeout policy and must be closed by its creator.
+// TLS, routing, and timeout policy and must be closed by its creator. New does
+// not inspect version/noeviction or connect itself. Prefix must be 1..64 bytes
+// without braces, NUL/CR/LF or spaces; use a nonsensitive deployment namespace.
 func New(client valkeygo.Client, prefix string) (*Store, error) {
 	if client == nil {
 		return nil, lease.Wrap(lease.ErrInvalidState, "nil valkey client")
@@ -26,7 +28,10 @@ func New(client valkeygo.Client, prefix string) (*Store, error) {
 	return newStore(newNativeExecutor(client), prefix)
 }
 
-// Open constructs a backend and verifies Valkey 9 plus noeviction policy.
+// Open borrows the client and inspects version >=9 and maxmemory-policy=noeviction
+// under the nonnil caller context, then validates prefix/constructs the Store.
+// It does not close the client on error or enforce persistent policy afterwards.
+// These two responses are not a cluster-wide durability, TLS/ACL or failover audit.
 func Open(ctx context.Context, client valkeygo.Client, prefix string) (*Store, error) {
 	if client == nil {
 		return nil, lease.Wrap(lease.ErrInvalidState, "nil valkey client")

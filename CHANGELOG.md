@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Documentation
+
+- Clarify lease admission clocks, native TTL granularity, fencing/guard authority,
+  cooperative renewal/callback lifetimes and manager capacity/cleanup contracts.
+- Document observation registration/loss and diagnostic redaction boundaries
+  without changing executable lease, backend or adapter behavior.
+
 ### Changed
 
 - Adopt Queue 1.1.2 while preserving lease-aware worker admission, fencing,

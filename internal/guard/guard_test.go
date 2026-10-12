@@ -21,6 +21,8 @@ type immediateSleeper struct{}
 
 func (immediateSleeper) Sleep(context.Context, time.Duration) error { return nil }
 
+// Callback-triggered expiry and renewal/release errors isolate guard orchestration
+// and joined classifications; no resource-side write or backend service is modeled.
 type backend struct {
 	now          time.Time
 	acquireErr   error

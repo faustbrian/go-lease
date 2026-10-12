@@ -10,6 +10,8 @@ import (
 	lease "github.com/faustbrian/go-lease/v2"
 )
 
+// Captures operation/key/argument shapes and injects reply classes. It does not
+// execute Lua, expire hashes or establish actual same-slot service atomicity.
 type fakeExecutor struct {
 	reply []string
 	err   error
@@ -49,6 +51,8 @@ func TestTryAcquireUsesRedactedSameSlotKeys(t *testing.T) {
 	}
 }
 
+// The historical name says authenticated, but this fake test proves coordinate
+// derivation/shape only: Guard construction performs no remote ownership check.
 func TestGuardExportsOnlyTheAuthenticatedLeaseCoordinates(t *testing.T) {
 	t.Parallel()
 

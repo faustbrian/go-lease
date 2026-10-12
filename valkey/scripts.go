@@ -1,5 +1,9 @@
 package valkey
 
+// Keep the INCR result as the server's decimal string via GET: Lua's numeric
+// representation cannot exactly retain every signed 64-bit fence. The counter
+// deliberately has no lease TTL; deleting it would reset successor ordering.
+// Script literals are protected by native comparison/response tests.
 const acquireScript = `
 if redis.call('EXISTS', KEYS[1]) == 1 then
   return {'contended'}

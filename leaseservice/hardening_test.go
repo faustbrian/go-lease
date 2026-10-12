@@ -13,6 +13,9 @@ type serviceClock struct{ now time.Time }
 
 func (clock serviceClock) Now() time.Time { return clock.now }
 
+// Entry/proceed channels deliberately hold acquisition and release across
+// shutdown boundaries; accounting and renewal-stop order are observable without
+// a database. Some hooks ignore contexts to exercise caller-independent cleanup.
 type serviceBackend struct {
 	now               time.Time
 	acquireErr        error

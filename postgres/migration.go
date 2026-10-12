@@ -2,15 +2,23 @@ package postgres
 
 import migrations "github.com/faustbrian/go-migrations/v2"
 
-// Migration describes the reversible PostgreSQL schema contract.
+// Migration is the value description of lease/fence schema DDL, not execution
+// or permission authority. Dropping/recreating it loses the continuity epoch.
 type Migration struct {
+	// Version is the schema migration identifier, not a fencing token.
 	Version uint
-	Name    string
-	Up      string
-	Down    string
+	// Name identifies the schema operation.
+	Name string
+	// Up creates the two tables and indexes in the caller-selected schema context.
+	Up string
+	// Down drops lease records and persistent fences; historical resource fences
+	// require operator coordination before a recreated backend admits ownership.
+	Down string
 }
 
-// SchemaMigration returns the durable lease and persistent-fence schema.
+// SchemaMigration returns fresh DDL values without touching a database. The
+// caller owns migration transactions/search_path/permissions; executing Down is
+// structurally reversible DDL, not preservation of monotonic fence history.
 func SchemaMigration() Migration {
 	return Migration{
 		Version: 1,
@@ -38,7 +46,9 @@ DROP TABLE lease_fences;`,
 	}
 }
 
-// GoMigration returns the schema in migrations' immutable format.
+// GoMigration validates the DDL into go-migrations/v2's immutable value with
+// TransactionModeDefault. It performs no database work or continuity recovery;
+// the caller owns migration execution and any adoption/rollback consequences.
 func GoMigration() (migrations.Migration, error) {
 	migration := SchemaMigration()
 	return migrations.NewMigration(

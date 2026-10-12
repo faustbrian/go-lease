@@ -1,4 +1,7 @@
-// Command postgres demonstrates acquiring a PostgreSQL-backed fenced lease.
+// Command postgres demonstrates one PostgreSQL lease acquire/release using a
+// caller-owned pool from POSTGRES_URL. The operator must first install the schema
+// and choose connection/durability policy. It adds no protected effect or complete
+// shutdown/failover qualification; this example requires a configured live server.
 package main
 
 import (

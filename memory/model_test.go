@@ -11,6 +11,9 @@ import (
 	"github.com/faustbrian/go-lease/v2/memory"
 )
 
+// FuzzLeaseStateModel bounds traces to 128 memory-backend acquire/renew/release/
+// forward/rollback steps. Its oracle is strictly increasing successful fences;
+// renewal/release failures are not a complete lifecycle/linearizability oracle.
 func FuzzLeaseStateModel(f *testing.F) {
 	f.Add([]byte{0, 1, 2, 3, 4})
 	f.Add([]byte{0, 4, 0, 2, 3})

@@ -12,6 +12,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// Fake rows expose supplied SQL/arguments and response conversion only. They
+// do not execute a statement transaction, prove locking or qualify a live clock.
 type fakeDatabase struct {
 	rows  []pgx.Row
 	query string

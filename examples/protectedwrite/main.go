@@ -1,4 +1,8 @@
-// Command protectedwrite demonstrates rejecting a stale fencing token.
+// Command protectedwrite demonstrates a process-local resource that compares
+// and stores its highest fence with an effect under one mutex. Equal fences are
+// rejected too, so this example allows one accepted write per token, not arbitrary
+// multiple effects under a lease. It needs no external service/cgo and is not a
+// durable resource, authentication boundary or distributed continuity mechanism.
 package main
 
 import (
@@ -15,6 +19,8 @@ type resource struct {
 	value string
 }
 
+// Compare the fence and apply the effect in the same critical section. Splitting
+// them would let a predecessor overwrite a successor between check and mutation.
 func (resource *resource) write(fence lease.Token, value string) error {
 	resource.mu.Lock()
 	defer resource.mu.Unlock()

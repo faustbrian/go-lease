@@ -1,4 +1,9 @@
-// Package leaseservice integrates managed leases with service lifecycle hooks.
+// Package leaseservice owns bounded handle accounting and optional renewal for
+// service lifecycles. New creates a Manager; Acquire returns handles and Hooks
+// exposes Shutdown as Stop. Shutdown stops admission and joins one shared cleanup.
+// The manager never closes the borrowed lease client/backend or owns application
+// effects. Cancellation bounds waits, not arbitrary backend/sleeper execution;
+// infrastructure is only that of the selected Backend, with no added cgo need.
 package leaseservice
 
 import (
@@ -15,7 +20,11 @@ type owned struct {
 	managed *lease.Managed
 }
 
-// Manager bounds managed renewal goroutines and explicit shutdown release.
+// Manager owns acquired handles, renewers and in-flight capacity reservations.
+// It is concurrency-safe, must be constructed by New, and becomes permanently
+// closed when Shutdown begins. Releasing a returned handle manually does not
+// remove its accounting entry; successful entries retain capacity until cleanup.
+// The client/backend remain borrowed. See docs/shutdown.md.
 type Manager struct {
 	mu               sync.Mutex
 	client           *lease.Client
@@ -41,7 +50,12 @@ func New(client *lease.Client, maxHandles uint32) (*Manager, error) {
 	return manager, nil
 }
 
-// Acquire reserves capacity, acquires ownership, and starts renewal when enabled.
+// Acquire rejects nil/canceled contexts before state/backend work, reserves
+// capacity nonblockingly and starts renewal when enabled. Renewal uses a fresh
+// background context, not the acquisition request's cancellation or values.
+// Failures retain the reservation until rollback release finishes. If Shutdown
+// wins, shared cleanup owns the acquired handle and this call waits for that
+// result or its own context; an error need not mean remote acquisition was absent.
 func (manager *Manager) Acquire(
 	ctx context.Context,
 	key lease.Key,
@@ -106,7 +120,9 @@ func (manager *Manager) Acquire(
 	return handle, nil
 }
 
-// Active returns reserved and owned handle count.
+// Active returns accounting entries, including in-flight acquisitions and
+// cleanup, not a probe of remotely usable ownership. A manually released/expired
+// handle still counts until the manager's shutdown cleanup removes its entry.
 func (manager *Manager) Active() uint32 {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
@@ -114,7 +130,11 @@ func (manager *Manager) Active() uint32 {
 }
 
 // Shutdown starts one caller-independent ordered cleanup and waits for its
-// cached terminal result within the caller's context.
+// cached terminal result within the caller's context. Nil context is rejected.
+// Admission stays closed; cleanup waits for acquisitions, then stops/releases
+// entries sequentially. Each release retains its policy timeout, not one total
+// caller budget, and uncooperative dependencies can delay the shared completion.
+// Canceling a waiter does not stop cleanup or prove remote release.
 func (manager *Manager) Shutdown(ctx context.Context) error {
 	if ctx == nil {
 		return lease.Wrap(lease.ErrInvalidState, "service shutdown context")
@@ -145,6 +165,9 @@ func (manager *Manager) cleanup() {
 	manager.mu.Lock()
 	acquisitionsDone := manager.acquisitionsDone
 	manager.mu.Unlock()
+	// An acquisition may still acquire/start renewal or be rolling back. Keep
+	// ownership accounting until it joins the shared list or finishes release;
+	// early cleanup could leak a reservation or release before renewal stops.
 	<-acquisitionsDone
 
 	manager.mu.Lock()
@@ -168,7 +191,9 @@ func (manager *Manager) cleanup() {
 	manager.mu.Unlock()
 }
 
-// Hooks adapts the manager to service's caller-owned lifecycle contract.
+// Hooks returns a no-op Start and this manager's Shutdown as Stop. Hook
+// construction does not start work or close the borrowed backend/client; the
+// caller's service runner owns invocation order and shutdown waiting.
 func (manager *Manager) Hooks() serviceintegration.Hooks {
 	return serviceintegration.Hooks{
 		Start: func(context.Context) error { return nil },

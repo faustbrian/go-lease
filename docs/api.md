@@ -11,10 +11,12 @@ concurrent waiters and managed renewers.
 contention and stops at both the wait and attempt bounds. `Handle` exposes
 `Owner`, `Token`, `Snapshot`, `AcquiredAt`, `Deadline`, `State`, `Renew`,
 `Validate`, `Release`, and `StartManaged`. `Snapshot` returns the latest
-backend-authenticated record for protected-adapter composition; admission
-still uses `State` or `Validate`. `AcquiredAt` is backend-clock inspection
-data; `Deadline` is the conservative local admission bound and is safe across
-backend/client clock skew.
+copied backend record for protected-adapter composition, not authenticated or
+current-ownership proof; admission still uses `State` or `Validate`. `AcquiredAt`
+is backend-clock inspection data. `Deadline` exposes the injected-clock bound,
+while `State` also checks an independent real-time bound. Native backend TTLs
+truncate fractional milliseconds; use whole milliseconds and a suitable margin,
+not an unconditional claim that local admission matches remote expiry.
 
 Client acquisition rejects a literal nil context as `ErrInvalidState` and a
 pre-canceled context as `ErrCanceled` before owner generation, capacity
@@ -26,13 +28,18 @@ Stable errors are `ErrContended`, `ErrTimeout`, `ErrCanceled`, `ErrLost`,
 
 `NewObservedBackend` emits bounded operation, outcome, time, and hashed key. It
 never emits owner or raw key. Observer panics are contained and callbacks run
-after the backend operation without package locks held.
+after the backend operation without package locks held. Serialization is per
+registration: duplicate/shared observer objects must handle concurrent callbacks.
+There is no callback context or join/closer; blocking code retains its slot.
+`Event.String` formats caller-built fields literally, without validation/redaction;
+only package-emitted values have fixed labels and derived hashes. These hashes
+are stable and unkeyed, not secrecy against guesses.
 
 `valkey.New` trusts caller configuration; `valkey.Open` additionally verifies
 Valkey 9 or newer and `noeviction` before returning a backend. `Open` validates
 the client first, then rejects nil or pre-canceled contexts before issuing a
 Valkey command.
-`valkey.Store.Guard` validates an owned record and returns a value implementing
+`valkey.Store.Guard` checks record coordinate shape and returns a value implementing
 the cache module's ownership-guard contract. Constructing a guard performs no
 backend call; the protected writer must compare its storage key, owner, and
 token atomically at publication time.

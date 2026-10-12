@@ -12,6 +12,9 @@ import (
 	"github.com/faustbrian/go-lease/v2/memory"
 )
 
+// BenchmarkAcquireRelease measures local acquire/release with a fresh key each
+// iteration, including key construction and retained fence-map growth. Setup is
+// not timer-reset; compare equal workloads, not remote service throughput.
 func BenchmarkAcquireRelease(b *testing.B) {
 	clock := leasetest.NewClock(time.Now())
 	store, _ := memory.New(memory.Options{Clock: clock, MaxKeys: ^uint32(0)})
@@ -28,6 +31,8 @@ func BenchmarkAcquireRelease(b *testing.B) {
 	}
 }
 
+// BenchmarkRenew measures repeated memory-backend renewal with a fixed injected
+// clock. Setup is not timer-reset; no wire I/O or managed timer scheduling occurs.
 func BenchmarkRenew(b *testing.B) {
 	clock := leasetest.NewClock(time.Now())
 	store, _ := memory.New(memory.Options{Clock: clock, MaxKeys: 1})
@@ -43,6 +48,8 @@ func BenchmarkRenew(b *testing.B) {
 	}
 }
 
+// BenchmarkContention excludes setup/initial acquisition and measures rejected
+// attempts against one live memory key and a frozen clock, not fairness/latency.
 func BenchmarkContention(b *testing.B) {
 	clock := leasetest.NewClock(time.Now())
 	store, _ := memory.New(memory.Options{Clock: clock, MaxKeys: 1})
@@ -59,6 +66,9 @@ func BenchmarkContention(b *testing.B) {
 	}
 }
 
+// BenchmarkRenewalLoad excludes initial setup and measures parallel direct
+// memory renewals of one owner/token under store synchronization. It does not
+// create Managed goroutines or qualify production renewal capacity.
 func BenchmarkRenewalLoad(b *testing.B) {
 	clock := leasetest.NewClock(time.Now())
 	store, _ := memory.New(memory.Options{Clock: clock, MaxKeys: 1})

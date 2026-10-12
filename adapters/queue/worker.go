@@ -1,4 +1,9 @@
-// Package leasequeue integrates fenced leases with queue workers.
+// Package leasequeue adds lease admission to a borrowed queue worker. NewWorker
+// wraps Run, exposes TokenFromContext and explicitly releases after callback
+// completion. Queue/Request/Shutdown remain delegated, not lease-owned lifetimes.
+// Optional renewal signals loss through cancellation but cannot stop arbitrary
+// work; durable resource fencing/idempotency stay application-owned. It requires
+// only the selected Backend, not a new queue service or cgo integration.
 package leasequeue
 
 import (
@@ -12,10 +17,15 @@ import (
 
 type tokenContextKey struct{}
 
-// KeyFunc derives a bounded lease key from a delivered queue message.
+// KeyFunc derives a validated lease key from borrowed task data. Calls are
+// synchronous before acquisition, without panic containment or a context;
+// concurrent Run calls require a safe, prompt function. Errors are wrapped
+// unchanged and can expose caller diagnostic text.
 type KeyFunc func(core.TaskMessage) (lease.Key, error)
 
-// Worker adds unique-job and non-overlap admission to a queue worker.
+// Worker adds per-key lease admission around Run, not queue deduplication or
+// durable exactly-once effects. Dependencies are borrowed and concurrency follows
+// their contracts. Its zero value is unusable; construction adds no goroutine.
 type Worker struct {
 	inner  core.Worker
 	client *lease.Client
@@ -23,7 +33,9 @@ type Worker struct {
 	key    KeyFunc
 }
 
-// NewWorker wraps a caller-owned worker with fenced lease admission.
+// NewWorker borrows nonnil worker/client/key function and snapshots policy.
+// It rejects nil interfaces/functions but not typed-nil implementations, and
+// expects Policy from NewPolicy rather than revalidating it here.
 func NewWorker(
 	inner core.Worker,
 	client *lease.Client,
@@ -36,7 +48,11 @@ func NewWorker(
 	return &Worker{inner: inner, client: client, policy: policy, key: key}, nil
 }
 
-// Run acquires the message lease and exposes its fence through context.
+// Run calls KeyFunc, acquires ownership and invokes the inner worker with a
+// child context carrying its fence. Optional renewal cancels on reported loss;
+// disabled renewal does not create an expiry watcher. It joins callback/cleanup
+// errors after return, but cannot undo effects or force callback termination.
+// Task data is borrowed unchanged; panics can skip explicit release.
 func (worker *Worker) Run(ctx context.Context, task core.TaskMessage) error {
 	key, err := worker.key(task)
 	if err != nil {
@@ -61,7 +77,9 @@ func (worker *Worker) Queue(task core.TaskMessage) error { return worker.inner.Q
 // Request delegates to the caller-owned worker.
 func (worker *Worker) Request() (core.TaskMessage, error) { return worker.inner.Request() }
 
-// TokenFromContext returns the fencing token for protected-resource writes.
+// TokenFromContext reads the token installed during Run from a nonnil context.
+// False means absent/wrong typed value. Presence is not current ownership or
+// authorization: the receiving resource must atomically enforce fencing.
 func TokenFromContext(ctx context.Context) (lease.Token, bool) {
 	token, ok := ctx.Value(tokenContextKey{}).(lease.Token)
 	return token, ok

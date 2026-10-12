@@ -35,5 +35,6 @@
 - [Benchmark baseline](benchmark-baseline.md)
 - [Laravel migration](laravel-migration.md)
 - [FAQ](faq.md)
+- [Source documentation audit](source-documentation-audit.md)
 - [Contributing](../CONTRIBUTING.md)
 - [Release history](../CHANGELOG.md)

@@ -1,4 +1,11 @@
-// Package valkey provides native atomic fenced leases for Valkey.
+// Package valkey implements fenced leases with native Valkey Lua operations and
+// server time. New borrows a client; Open additionally inspects version >=9 and
+// noeviction policy once. The creator owns client closure, TLS/ACLs/timeouts and
+// durability. Same-slot lease/counter keys use a stable truncated SHA-256 digest;
+// retained counters define continuity, not failover/restore guarantees or secrecy.
+// Guard supplies coordinates for a same-deployment atomic protected writer,
+// not an active-ownership proof. TTL uses milliseconds and no cgo is introduced.
+// See docs/backend-guarantees.md and docs/protected-writes.md.
 package valkey
 
 import (
@@ -27,20 +34,29 @@ type executor interface {
 	Exec(context.Context, operation, []string, []string) ([]string, error)
 }
 
-// Store persists atomic leases using backend-time Lua operations.
+// Store borrows a native executor/client and immutable validated prefix. Its
+// zero value is unusable; concurrent use follows the native client contract.
+// Direct operations require nonnil bounded contexts; mutation failures may be
+// ambiguous after transmission. Counter deletion/eviction/restore loses fencing
+// continuity even though lease hashes normally expire separately.
 type Store struct {
 	executor executor
 	prefix   string
 }
 
-// Guard is an opaque active-ownership proof for atomic Valkey protected writes.
+// Guard holds opaque storage coordinates for a compatible atomic protected
+// writer. Construction does not inspect backend state, expiry or caller authority;
+// a copied or retained Guard can already be stale. The writer must compare the
+// active lease key/owner/token at the effect boundary in the same deployment.
 type Guard struct {
 	storageKey string
 	owner      string
 	token      string
 }
 
-// StorageKey returns the redacted Valkey lease hash key.
+// StorageKey returns the configured prefix and same-slot hashed lease key.
+// Hashing avoids literal key exposure but is unkeyed, stable and guessable;
+// it is not encryption or permission to disclose an arbitrary prefix.
 func (guard Guard) StorageKey() string { return guard.storageKey }
 
 // Owner returns the lease owner compared by a protected write.
@@ -66,7 +82,11 @@ func newStore(executor executor, prefix string) (*Store, error) {
 }
 
 // Guard derives the backend coordinates required to validate owned atomically.
-// The protected writer must use the same Valkey deployment as this Store.
+// The protected writer must share this Store's deployment, configured prefix,
+// key derivation and continuity epoch. Only nonempty key/owner, owner length
+// and nonzero token are checked; freely constructed Record values are not
+// authenticated here. The writer checks active ownership at the effect boundary,
+// not during Guard construction.
 func (store *Store) Guard(owned lease.Record) (Guard, error) {
 	if owned.Key.String() == "" {
 		return Guard{}, lease.Wrap(lease.ErrInvalidState, "valkey guard")
@@ -87,7 +107,11 @@ func (store *Store) Guard(owned lease.Record) (Guard, error) {
 	}, nil
 }
 
-// TryAcquire atomically increments the persistent counter and creates a lease.
+// TryAcquire acquires only an absent lease hash, using server TIME and a retained
+// signed-counter key; live ownership reports contention even for the same owner.
+// TTL is at least 1ms and fractional milliseconds are truncated. Transport errors
+// may follow mutation and are ambiguous; native cause text is hidden only from
+// ordinary formatting, not programmatic error traversal.
 func (store *Store) TryAcquire(
 	ctx context.Context,
 	key lease.Key,
@@ -106,7 +130,10 @@ func (store *Store) TryAcquire(
 	return parseRecord(key, owner, reply, lease.ErrContended)
 }
 
-// Renew atomically compares owner and token before extending backend expiry.
+// Renew compares the existing lease hash owner/token and refreshes expiry from
+// server time without changing acquisition/token values. TTL is at least 1ms,
+// with fractional milliseconds truncated. Missing or mismatching ownership is
+// stale; transport errors can follow extension and require reconciliation.
 func (store *Store) Renew(
 	ctx context.Context,
 	owned lease.Record,
@@ -132,7 +159,10 @@ func (store *Store) Renew(
 	return record, nil
 }
 
-// Validate atomically compares owner and token against an unexpired lease.
+// Validate compares owner/token on the server's nonexpired lease hash, without
+// extending it or reserving a later effect. Missing/mismatched ownership is stale;
+// read errors are canceled/unavailable. A retained record or Guard is not a
+// substitute for this check or the protected writer's atomic effect check.
 func (store *Store) Validate(ctx context.Context, owned lease.Record) (lease.Record, error) {
 	if err := validate(ctx, owned.Key, owned.Owner, owned.Token, time.Millisecond); err != nil {
 		return lease.Record{}, err
@@ -153,7 +183,10 @@ func (store *Store) Validate(ctx context.Context, owned lease.Record) (lease.Rec
 	return record, nil
 }
 
-// Release atomically deletes only a matching lease; missing is idempotent.
+// Release deletes only the matching owner/token lease hash, leaving its counter
+// intact. Missing ownership is idempotent success; a successor is ErrStaleOwner.
+// A lost response can follow deletion and returns ErrAmbiguousOutcome, not proof
+// of absence or a reason to replay an unprotected application effect.
 func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 	if err := validate(ctx, owned.Key, owned.Owner, owned.Token, time.Millisecond); err != nil {
 		return err
@@ -178,6 +211,9 @@ func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 }
 
 func (store *Store) keys(key lease.Key) []string {
+	// Both keys share the same cluster tag so lease/counter Lua mutation is atomic.
+	// Preserve this derivation/prefix within a continuity epoch; hashes hide literal
+	// names, not known-key guesses or administration-level backend access.
 	sum := sha256.Sum256([]byte(key.String()))
 	digest := hex.EncodeToString(sum[:16])
 	tag := "{" + digest + "}"

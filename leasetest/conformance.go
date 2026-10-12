@@ -11,11 +11,18 @@ import (
 
 // BackendFixture supplies one isolated backend and an expiry transition.
 type BackendFixture struct {
+	// Backend is one isolated implementation for this assertion subtest.
 	Backend lease.Backend
-	Expire  func(time.Duration)
+	// Expire synchronously advances/waits the backend's expiry domain by duration.
+	// It must return promptly and leave the old lease eligible for a successor.
+	Expire func(time.Duration)
 }
 
-// RunBackendConformance proves the shared fencing and stale-owner contract.
+// RunBackendConformance asserts contention, renewal, validation, increasing
+// successor fences, independent owner/token mismatch refusal and repeated release.
+// The factory supplies isolated state and owns resource cleanup (for example via
+// t.Cleanup); Expire controls expiry. This finite suite is not failover, restore,
+// hostile-server, clock-synchronization or full protocol qualification.
 func RunBackendConformance(
 	t *testing.T,
 	factory func(*testing.T) BackendFixture,

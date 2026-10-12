@@ -1,5 +1,7 @@
 // Package memory provides a deterministic process-local reference backend.
-// It is not a distributed coordination backend.
+// It is not a distributed coordination backend. New borrows a prompt Clock and
+// owns a bounded per-key map protected by one mutex. Fence history lasts only
+// for this store instance; there is no persistence, service or cgo dependency.
 package memory
 
 import (
@@ -14,7 +16,11 @@ import (
 
 // Options bounds and configures the process-local reference backend.
 type Options struct {
-	Clock   lease.Clock
+	// Clock is required and consulted under the store mutex; it must not re-enter
+	// the store. Forward/rollback fault clocks affect this backend's expiry checks.
+	Clock lease.Clock
+	// MaxKeys bounds distinct keys retained for the instance lifetime. Release
+	// keeps their fence history, so inactive/expired keys still consume capacity.
 	MaxKeys uint32
 }
 
@@ -23,7 +29,10 @@ type entry struct {
 	active bool
 }
 
-// Store is a deterministic, concurrency-safe reference backend.
+// Store is a concurrency-safe process-local reference backend, not shared
+// distributed ownership. Its zero value is unusable. It retains every key and
+// fence, rejecting new cardinality or uint64 token exhaustion rather than
+// evicting continuity history; replacing it resets the continuity epoch.
 type Store struct {
 	mu      sync.Mutex
 	clock   lease.Clock
@@ -42,7 +51,10 @@ func New(options Options) (*Store, error) {
 	}, nil
 }
 
-// TryAcquire acquires an absent, released, or expired lease.
+// TryAcquire uses injected time under the mutex to acquire absent/released/
+// expired ownership, with a strictly higher per-key uint64 fence. A live lease
+// is ErrContended even for the same owner. Context must be nonnil; identity/TTL
+// are checked before locking, without remote I/O or per-call context deadlines.
 func (store *Store) TryAcquire(
 	ctx context.Context,
 	key lease.Key,
@@ -74,7 +86,10 @@ func (store *Store) TryAcquire(
 	return record, nil
 }
 
-// Renew extends a lease only while owner, token, and deadline remain current.
+// Renew compares active owner/token and injected-clock expiry, then extends
+// from the current clock time without changing acquisition time/token. It
+// requires a nonnil context and positive TTL; stale/missing/expired ownership
+// returns ErrStaleOwner. Clock rollback is not compensated by this backend.
 func (store *Store) Renew(
 	ctx context.Context,
 	owned lease.Record,
@@ -130,7 +145,9 @@ func (store *Store) Validate(ctx context.Context, owned lease.Record) (lease.Rec
 	return current.record, nil
 }
 
-// Release idempotently deactivates only the matching owner and token.
+// Release deactivates matching ownership even after expiry and retains its
+// record/fence. Repeats for that same inactive owner/token succeed; missing
+// entries or successors return ErrStaleOwner. Context must be nonnil.
 func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 	if err := validateIdentity(ctx, owned.Key, owned.Owner, owned.Token); err != nil {
 		return err
@@ -150,6 +167,8 @@ func (store *Store) Release(ctx context.Context, owned lease.Record) error {
 	if !sameOwner(current.record, owned) {
 		return lease.Wrap(lease.ErrStaleOwner, "release")
 	}
+	// Keep both the old owner and token so repeated release can be recognized and
+	// the next acquisition cannot reset its fence. This also retains key capacity.
 	current.active = false
 	store.entries[owned.Key.String()] = current
 	return nil

@@ -1,4 +1,8 @@
-// Package guard runs callbacks under fail-closed managed lease ownership.
+// Package guard joins lease acquisition, optional renewal and explicit release
+// for queue/scheduler callbacks. Run borrows client and callback, owns its child
+// context/renewal watcher, and cannot force callback termination or fence effects.
+// It introduces no service beyond the chosen Backend; resource checks remain
+// caller-owned, as described in docs/fencing.md.
 package guard
 
 import (
@@ -8,7 +12,13 @@ import (
 	lease "github.com/faustbrian/go-lease/v2"
 )
 
-// Run acquires, optionally renews, cancels on loss, and explicitly releases.
+// Run acquires key, invokes callback synchronously with the token, and joins
+// callback/renewal/release errors. Enabled renewal cancels the child context on
+// a reported renewal failure; without renewal there is no automatic TTL watcher.
+// Stop and release use cancellation-detached contexts, retaining handle operation
+// bounds. Cooperative callback/sleeper/backend termination is required. Panics
+// are not contained and can skip explicit release; resource-side fencing and
+// effect idempotency remain mandatory for work that outlives ownership.
 func Run(
 	ctx context.Context,
 	client *lease.Client,
@@ -40,6 +50,8 @@ func Run(
 		}()
 	}
 
+	// Cancellation signals loss but cannot stop an arbitrary callback or undo an
+	// effect already in flight. Join the renewal watcher before returning errors.
 	callbackErr := callback(runContext, handle.Token())
 	cancel()
 	if managed != nil {

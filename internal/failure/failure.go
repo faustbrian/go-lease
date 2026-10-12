@@ -1,8 +1,12 @@
-// Package failure preserves error identity without rendering sensitive causes.
+// Package failure formats stable lease classifications without rendering driver
+// causes. Native backends use Wrap with safe operation/classification text;
+// error traversal still exposes original causes, so diagnostics must be selective.
+// It adds no resource lifetime, service dependency or general-purpose redaction.
 package failure
 
-// Classified is a redacted error with a stable classification and hidden
-// programmatic cause.
+// Classified hides the cause only in its ordinary Error rendering. The
+// classification and operation must already be safe; Unwrap exposes both errors
+// programmatically, including any sensitive text carried by the original cause.
 type Classified struct {
 	operation      string
 	classification error
@@ -22,7 +26,9 @@ func (err *Classified) Error() string {
 	return "lease " + err.operation + ": " + err.classification.Error()
 }
 
-// Unwrap exposes identities to errors.Is without exposing cause text.
+// Unwrap returns classification and original cause for errors.Is/errors.As.
+// Traversing or logging the returned cause can expose its raw text; formatting
+// protection does not erase the cause or make arbitrary traversal safe.
 func (err *Classified) Unwrap() []error {
 	return []error{err.classification, err.cause}
 }
