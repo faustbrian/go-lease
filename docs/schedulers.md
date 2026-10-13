@@ -1,5 +1,8 @@
 # Scheduler integration
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 `leasescheduler.Coordinator.OnOneServer` and `WithoutOverlapping` use the same
 fenced execution path. The callback receives a token and a context canceled on
 managed-renewal loss.

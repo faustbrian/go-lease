@@ -1,5 +1,8 @@
 # FAQ
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 ## Is this a mutex?
 
 No. Ownership expires, and old work may continue. Use fencing at the resource.

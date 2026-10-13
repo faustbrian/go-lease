@@ -1,5 +1,8 @@
 # Shutdown
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 `adapters/service.Manager` reserves a bounded handle count and starts renewal
 only when the policy enables it. Its `Hooks` method plugs into `service`.
 `leaseservice.Manager` is the deprecated compatibility facade.

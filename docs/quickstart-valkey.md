@@ -1,5 +1,8 @@
 # Valkey quickstart
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: Operations runbook](operations.md)
+
 Requirements: Valkey 9, `noeviction`, one authoritative deployment, and a
 caller-configured `valkey-go` client with TLS, ACL, routing, and timeouts.
 

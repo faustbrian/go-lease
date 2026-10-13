@@ -1,5 +1,8 @@
 # Benchmark baseline
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 The explicit full route, `make check-full`, runs
 `go test ./... -run '^$' -bench . -benchmem
 -benchtime=100ms`. Baselines are environment-specific; capture the full output

@@ -1,5 +1,8 @@
 # Resource budgets
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 | Resource | Bound |
 |---|---|
 | canonical key | 256 bytes |

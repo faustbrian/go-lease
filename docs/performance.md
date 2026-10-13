@@ -1,5 +1,8 @@
 # Performance
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 The explicit full route, `make check-full`, retains the native `./...`
 benchmark operation at `100ms` with a `20m` timeout for acquisition/release
 and renewal latency and allocation baselines. Ordinary local gates do not run

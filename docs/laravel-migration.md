@@ -1,5 +1,8 @@
 # Migrating Laravel locks and unique jobs
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 Laravel cache locks and `ShouldBeUnique` prevent common overlap but do not
 provide a protected-resource fencing protocol. Inventory every lock key, TTL,
 blocking wait, owner assumption, and side effect before migration.

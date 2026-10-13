@@ -1,5 +1,8 @@
 # Fencing model
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 For key `k`, each successful acquisition returns token `F(k,n)` where
 `F(k,n+1) > F(k,n)` within the backend's continuity epoch. Owner identity and
 token are compared together for renew, validate, and release.

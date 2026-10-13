@@ -1,5 +1,8 @@
 # API reference
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: Operations runbook](operations.md)
+
 `NewKey` validates a canonical namespace/name key of at most 256 bytes.
 `NewPolicy` copies and validates TTL, wait, retry, jitter, renewal, safety
 margin, and attempt bounds. `NewClient` injects a clock, owner source, sleeper,

@@ -1,5 +1,8 @@
 # Backend guarantees
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 | Property | Memory | Valkey | PostgreSQL |
 |---|---|---|---|
 | Distributed | no | yes | yes |

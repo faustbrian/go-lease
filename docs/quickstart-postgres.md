@@ -1,5 +1,8 @@
 # PostgreSQL quickstart
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: Operations runbook](operations.md)
+
 Apply the owned migration before constructing the backend:
 
 ```go

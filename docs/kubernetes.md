@@ -1,5 +1,8 @@
 # Kubernetes
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 Use one lease key per logical singleton, not per pod. Include cluster and
 environment in the namespace. Configure `terminationGracePeriodSeconds` above
 the application drain and release budget, but rely on TTL for `SIGKILL`, node

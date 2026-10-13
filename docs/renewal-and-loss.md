@@ -1,5 +1,8 @@
 # Renewal and loss handling
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 Choose `RenewEvery < TTL - SafetyMargin`. The margin covers request latency,
 runtime pauses, scheduling delay, and response processing. Managed renewal owns
 one goroutine, sends at most one `Loss`, and never releases implicitly.

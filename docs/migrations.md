@@ -1,5 +1,8 @@
 # PostgreSQL migrations
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 `postgres.GoMigration` returns an immutable `go-migrations/v2` migration.
 Migration 1 creates `lease_fences`, `lease_records`, expiry and cleanup indexes,
 checks, and the foreign key between lease rows and counters.

@@ -1,5 +1,8 @@
 # Threat model
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: Operations runbook](operations.md)
+
 Protected assets are exclusive admission, monotonic fences, successor leases,
 and identifiers. Adversaries include stale processes, partitions, clock jumps,
 backend rollback, replay, malicious contention, and operators restoring data.

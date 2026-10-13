@@ -1,5 +1,8 @@
 # Failover, restart, and restore
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 Valkey script cache loss is safe: the client retries the script body after
 `NOSCRIPT`. Reconnect and leader failover are safe only if the lease hash and
 counter reflect one authoritative committed history. Flush, restore without

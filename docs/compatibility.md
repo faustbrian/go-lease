@@ -1,5 +1,8 @@
 # Compatibility and rolling versions
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 The minimum Go version is 1.27.0; CI uses the patched Go 1.27.2 runtime.
 Applications should rebuild with the latest supported Go security patch.
 The v2 API baseline is checked by

@@ -1,5 +1,8 @@
 # Formal state machines
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 The model separates an acquisition attempt, a local handle, and the
 authoritative backend record. This prevents a local observation from being
 mistaken for a backend ownership transition.

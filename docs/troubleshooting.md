@@ -1,5 +1,8 @@
 # Troubleshooting
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 - Frequent `ErrTimeout`: inspect contention, key cardinality, retry bounds, and
   handler duration; do not add unbounded waiting.
 - `ErrAmbiguousOutcome`: stop admission. Check backend logs and wait for expiry

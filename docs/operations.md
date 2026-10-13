@@ -1,5 +1,8 @@
 # Operations runbook
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 Monitor success, contention, stale, unavailable, ambiguous, and renewal-loss
 rates using `NewObservedBackend`. Labels contain only operation, outcome, and a
 bounded key hash. Alert on any ambiguous renewal, token exhaustion, continuity

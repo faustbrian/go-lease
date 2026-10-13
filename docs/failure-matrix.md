@@ -1,5 +1,8 @@
 # Failure matrix
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 | Failure | Local result | Ownership admission | Operator action |
 |---|---|---|---|
 | contention | `ErrContended`/`ErrTimeout` | no | retry within policy |

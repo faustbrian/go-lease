@@ -1,5 +1,8 @@
 # Protected writes
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 The protected system, not the lease backend, rejects stale effects. Store a
 last-fence column beside the resource and update it in the same transaction as
 the effect.

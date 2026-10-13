@@ -1,5 +1,8 @@
 # Source documentation audit
 
+[Documentation map](index.md) · [Repository README](../README.md)
+[Next: API reference](api.md)
+
 ## Scope and acceptance
 
 Base: `ff28f9913a08bd1f024486c157f099b4d3a41949` (remote main).
