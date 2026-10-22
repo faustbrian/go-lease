@@ -23,6 +23,12 @@
   retaining Go 1.27.0 as the public module minimum. Applications need a
   patched-toolchain rebuild to receive standard-library security fixes.
 
+## 2.1.0 - 2026-10-22
+
+### Changed
+
+- Publish the current source and documentation with a fresh immutable tag.
+
 ## 2.0.0 - 2026-09-28
 
 ### Changed
