@@ -19,6 +19,14 @@
   the package names are unchanged. The removal precedes the announced 180-day
   window because owned consumers move with this release.
 
+## 2.1.0 - 2026-10-22
+
+### Changed
+
+- Publish the current source and documentation with a fresh immutable tag.
+- Build with Go 1.27.3 to address GO-2026-6809 in `crypto/x509`.
+  Consumers should use Go 1.27.3 or newer.
+
 ## Earlier unversioned notes (shipped by 2.1.0)
 
 ### Documentation
@@ -41,14 +49,6 @@
 - Use Go 1.27.2 and coherent compiler-compatible source tooling for CI,
   retaining Go 1.27.0 as the public module minimum. Applications need a
   patched-toolchain rebuild to receive standard-library security fixes.
-
-## 2.1.0 - 2026-10-22
-
-### Changed
-
-- Publish the current source and documentation with a fresh immutable tag.
-- Build with Go 1.27.3 to address GO-2026-6809 in `crypto/x509`.
-  Consumers should use Go 1.27.3 or newer.
 
 ## 2.0.0 - 2026-09-28
 

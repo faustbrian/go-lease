@@ -46,7 +46,7 @@ DROP TABLE lease_fences;`,
 	}
 }
 
-// GoMigration validates the DDL into go-migrations/v2's immutable value with
+// GoMigration validates the DDL into go-migrations/v4's immutable value with
 // TransactionModeDefault. It performs no database work or continuity recovery;
 // the caller owns migration execution and any adoption/rollback consequences.
 func GoMigration() (migrations.Migration, error) {

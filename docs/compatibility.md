@@ -3,9 +3,9 @@
 [Documentation map](index.md) · [Repository README](../README.md)
 [Next: API reference](api.md)
 
-The minimum Go version is 1.27.0; CI uses the patched Go 1.27.2 runtime.
+The minimum Go version is 1.27.0; CI uses the patched Go 1.27.3 runtime.
 Applications should rebuild with the latest supported Go security patch.
-The v2 API baseline is checked by
+The v3 API baseline is checked by
 `golib api check --module .` through the pinned public verifier. PostgreSQL
 versions 14 through 18 and Valkey 9 are exercised by the integration matrix.
 
@@ -34,5 +34,8 @@ returns the `go-migrations/v4` type with the same version, name, SQL and
 checksum; runners moving from go-migrations v2 must first complete the
 [ledger name upgrade](https://github.com/faustbrian/go-migrations/blob/v4.0.0/docs/operations.md#ledger-name-upgrade). The service adapter's `Hooks` bind
 `go-service/v3`, and the queue adapter accepts `go-queue/v2` workers. Key
-derivation, schema and fencing tokens are unchanged, so v2 and v3 clients
-share one continuity epoch during a rolling upgrade.
+derivation, schema and fencing tokens are unchanged, so v2 and v3 lease
+clients share one continuity epoch during a rolling upgrade. Binaries that run
+migrations are different: stop every v2-era migration runner before the ledger
+rename and do not restart one afterwards, because it would find an empty
+ledger and try to replay applied migrations.
