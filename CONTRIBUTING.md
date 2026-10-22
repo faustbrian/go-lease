@@ -38,7 +38,7 @@ that hide a failing package.
 
 ## Verification
 
-Use Go 1.27.2 for development and CI; the module minimum remains Go 1.27.0.
+Use Go 1.27.3 for development and CI; the module minimum remains Go 1.27.0.
 Root tests need no sibling checkout or ecosystem ledger:
 
 ```bash
