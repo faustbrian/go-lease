@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/leasetest"
-	"github.com/faustbrian/go-lease/v2/memory"
-	"github.com/faustbrian/go-queue/core"
+	lease "github.com/faustbrian/go-lease/v3"
+	"github.com/faustbrian/go-lease/v3/leasetest"
+	"github.com/faustbrian/go-lease/v3/memory"
+	"github.com/faustbrian/go-queue/v2/core"
 )
 
 type testMessage struct{}

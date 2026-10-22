@@ -3,7 +3,8 @@
 [Documentation map](index.md) · [Repository README](../README.md)
 [Next: API reference](api.md)
 
-`leasescheduler.Coordinator.OnOneServer` and `WithoutOverlapping` use the same
+`adapters/scheduler` (package `leasescheduler`) provides
+`Coordinator.OnOneServer` and `WithoutOverlapping`, which use the same
 fenced execution path. The callback receives a token and a context canceled on
 managed-renewal loss.
 

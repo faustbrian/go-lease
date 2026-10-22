@@ -1,6 +1,6 @@
 package postgres
 
-import migrations "github.com/faustbrian/go-migrations/v2"
+import migrations "github.com/faustbrian/go-migrations/v4"
 
 // Migration is the value description of lease/fence schema DDL, not execution
 // or permission authority. Dropping/recreating it loses the continuity epoch.

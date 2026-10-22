@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faustbrian/go-lease/v2/leasetest"
-	"github.com/faustbrian/go-lease/v2/memory"
+	"github.com/faustbrian/go-lease/v3/leasetest"
+	"github.com/faustbrian/go-lease/v3/memory"
 )
 
 func TestBackendConformance(t *testing.T) {

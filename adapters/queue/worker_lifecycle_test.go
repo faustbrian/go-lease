@@ -3,27 +3,15 @@ package leasequeue_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/leasequeue"
-	"github.com/faustbrian/go-lease/v2/leasetest"
-	"github.com/faustbrian/go-lease/v2/memory"
-	"github.com/faustbrian/go-queue/core"
+	lease "github.com/faustbrian/go-lease/v3"
+	leasequeue "github.com/faustbrian/go-lease/v3/adapters/queue"
+	"github.com/faustbrian/go-lease/v3/leasetest"
+	"github.com/faustbrian/go-lease/v3/memory"
+	"github.com/faustbrian/go-queue/v2/core"
 )
-
-func TestLegacyNamedTypesRetainPackageIdentity(t *testing.T) {
-	t.Parallel()
-
-	if got, want := reflect.TypeOf((*leasequeue.Worker)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasequeue"; got != want {
-		t.Fatalf("Worker package = %q, want %q", got, want)
-	}
-	if got, want := reflect.TypeOf((*leasequeue.KeyFunc)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasequeue"; got != want {
-		t.Fatalf("KeyFunc package = %q, want %q", got, want)
-	}
-}
 
 type task struct{ body []byte }
 

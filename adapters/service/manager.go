@@ -11,8 +11,8 @@ import (
 	"errors"
 	"sync"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	serviceintegration "github.com/faustbrian/go-service/integration"
+	lease "github.com/faustbrian/go-lease/v3"
+	serviceintegration "github.com/faustbrian/go-service/v3/integration"
 )
 
 type owned struct {

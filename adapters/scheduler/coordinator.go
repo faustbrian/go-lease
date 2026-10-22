@@ -9,8 +9,8 @@ package leasescheduler
 import (
 	"context"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/internal/guard"
+	lease "github.com/faustbrian/go-lease/v3"
+	"github.com/faustbrian/go-lease/v3/internal/guard"
 )
 
 // Task synchronously performs an occurrence with a fence and child context.

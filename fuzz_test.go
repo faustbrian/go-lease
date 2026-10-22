@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
+	lease "github.com/faustbrian/go-lease/v3"
 )
 
 // FuzzKeyParsing treats arbitrary strings as key input; successful parses must

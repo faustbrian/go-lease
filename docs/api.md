@@ -48,9 +48,8 @@ backend call; the protected writer must compare its storage key, owner, and
 token atomically at publication time.
 
 Queue, scheduler, and service integrations use `adapters/queue`,
-`adapters/scheduler`, and `adapters/service`. The released `leasequeue`,
-`leasescheduler`, and `leaseservice` paths are deprecated source-compatible
-facades.
+`adapters/scheduler`, and `adapters/service`. V3 removed the former
+`leasequeue`, `leasescheduler`, and `leaseservice` facade paths.
 
 All exported declarations are also available through `go doc` and protected by
 `golib api check --module .` through the pinned public verifier.

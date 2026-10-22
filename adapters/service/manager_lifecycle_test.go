@@ -3,23 +3,14 @@ package leaseservice_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/leaseservice"
-	"github.com/faustbrian/go-lease/v2/leasetest"
-	"github.com/faustbrian/go-lease/v2/memory"
+	lease "github.com/faustbrian/go-lease/v3"
+	leaseservice "github.com/faustbrian/go-lease/v3/adapters/service"
+	"github.com/faustbrian/go-lease/v3/leasetest"
+	"github.com/faustbrian/go-lease/v3/memory"
 )
-
-func TestLegacyManagerRetainsPackageIdentity(t *testing.T) {
-	t.Parallel()
-
-	if got, want := reflect.TypeOf((*leaseservice.Manager)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leaseservice"; got != want {
-		t.Fatalf("Manager package = %q, want %q", got, want)
-	}
-}
 
 func TestManagerBoundsHandlesAndReleasesOnShutdown(t *testing.T) {
 	t.Parallel()

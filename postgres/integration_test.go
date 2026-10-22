@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/leasetest"
-	leasepostgres "github.com/faustbrian/go-lease/v2/postgres"
+	lease "github.com/faustbrian/go-lease/v3"
+	"github.com/faustbrian/go-lease/v3/leasetest"
+	leasepostgres "github.com/faustbrian/go-lease/v3/postgres"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -230,6 +230,71 @@ WHERE owner = $1`, third.Owner); err != nil {
 	serializable := acquireAndRelease(ctx, t, store, key, "serializable-client")
 	if serializable.Token <= last.Token {
 		t.Fatalf("serializable token = %d, previous = %d", serializable.Token, last.Token)
+	}
+}
+
+// Rows written by an earlier major are seeded with raw SQL and the digest
+// computed by PostgreSQL itself, so a drifted key digest or schema cannot pass
+// by agreeing with itself.
+func TestLiveSeededFenceContinuity(t *testing.T) {
+	url := os.Getenv("POSTGRES_URL")
+	if url == "" {
+		t.Skip("POSTGRES_URL is not set")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	pool := openPool(ctx, t, url)
+	t.Cleanup(pool.Close)
+	migration := leasepostgres.SchemaMigration()
+	_, _ = pool.Exec(ctx, migration.Down)
+	if _, err := pool.Exec(ctx, migration.Up); err != nil {
+		t.Fatalf("apply migration: %v", err)
+	}
+	t.Cleanup(func() {
+		cleanupContext, cleanupCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cleanupCancel()
+		if _, err := pool.Exec(cleanupContext, migration.Down); err != nil {
+			t.Errorf("drop migration: %v", err)
+		}
+	})
+	seed := func(name, owner string, token int64, active bool, expiresIn string) {
+		t.Helper()
+		_, err := pool.Exec(ctx, `
+WITH digest AS (SELECT sha256(convert_to($1, 'UTF8')) AS value)
+, fence AS (
+    INSERT INTO lease_fences (key_digest, fencing_token)
+    SELECT value, $3 FROM digest
+)
+INSERT INTO lease_records (
+    key_digest, owner, fencing_token, acquired_at, expires_at, active, updated_at
+)
+SELECT value, $2, $3, now() - interval '1 hour', now() + $5::interval, $4, now()
+FROM digest`, "seeded/"+name, owner, token, active, expiresIn)
+		if err != nil {
+			t.Fatalf("seed %s: %v", name, err)
+		}
+	}
+	seed("released", "previous-owner", 7, false, "1 hour")
+	seed("expired", "previous-owner", 7, true, "-1 minute")
+	seed("active", "previous-owner", 7, true, "1 hour")
+
+	store, err := leasepostgres.New(pool)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	for _, name := range []string{"released", "expired"} {
+		key, _ := lease.NewKey("seeded", name)
+		record, err := store.TryAcquire(ctx, key, "successor", time.Second)
+		if err != nil {
+			t.Fatalf("TryAcquire(%s) error = %v", name, err)
+		}
+		if record.Token != 8 {
+			t.Fatalf("TryAcquire(%s) token = %d, want 8 after seeded token 7", name, record.Token)
+		}
+	}
+	key, _ := lease.NewKey("seeded", "active")
+	if _, err := store.TryAcquire(ctx, key, "successor", time.Second); !errors.Is(err, lease.ErrContended) {
+		t.Fatalf("TryAcquire(active) error = %v, want ErrContended", err)
 	}
 }
 

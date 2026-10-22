@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/faustbrian/go-lease/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/faustbrian/go-lease/actions/workflows/ci.yml)
 [![Documentation](https://img.shields.io/badge/docs-adoption_and_API-blue)](docs/index.md)
-[![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-lease/v2.svg)](https://pkg.go.dev/github.com/faustbrian/go-lease/v2)
+[![Go Reference](https://pkg.go.dev/badge/github.com/faustbrian/go-lease/v3.svg)](https://pkg.go.dev/github.com/faustbrian/go-lease/v3)
 [![Release](https://img.shields.io/github/v/release/faustbrian/go-lease?sort=semver)](https://github.com/faustbrian/go-lease/releases)
 [![Go](https://img.shields.io/badge/go-1.27.0-00ADD8?logo=go)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -20,9 +20,9 @@ with publication.
 
 ## Adoption entry points
 
-The root module is `github.com/faustbrian/go-lease/v2` (stable).
-It requires Go 1.27.0. Pin the published `v2.0.0` root tag
-with `go get github.com/faustbrian/go-lease/v2@v2.0.0`.
+The root module is `github.com/faustbrian/go-lease/v3` (stable).
+It requires Go 1.27.0. Pin the published `v3.0.0` root tag
+with `go get github.com/faustbrian/go-lease/v3@v3.0.0`.
 Root subpackages share this module; they need no separate installation.
 
 Start with the [documentation map](docs/index.md) for package selection,
@@ -30,8 +30,9 @@ examples, operational constraints, and contributor references.
 
 ## Five-minute start
 
-For v2, import `github.com/faustbrian/go-lease/v2` and add `/v2` before backend
-or adapter package names. Published v1 releases retain the path without `/v2`.
+Import `github.com/faustbrian/go-lease/v3` and add `/v3` before backend or
+adapter package names. Earlier majors keep their own module paths; see the
+[compatibility guide](docs/compatibility.md) before upgrading.
 
 Choose a backend guide:
 
@@ -68,8 +69,6 @@ the returned error. No acquisition order or starvation guarantee is provided.
 - `postgres`: native `pgx` backend and `migrations` schema
 - `adapters/queue`, `adapters/scheduler`, `adapters/service`: canonical
   queue, scheduler, and service lifecycle integrations
-- `leasequeue`, `leasescheduler`, `leaseservice`: deprecated compatibility
-  facades for the canonical adapter paths
 - `leasetest`: deterministic clock and cross-backend conformance suite
 
 See the [documentation index](docs/README.md), [security policy](SECURITY.md),

@@ -10,8 +10,8 @@ import (
 	"os"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	leasepostgres "github.com/faustbrian/go-lease/v2/postgres"
+	lease "github.com/faustbrian/go-lease/v3"
+	leasepostgres "github.com/faustbrian/go-lease/v3/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

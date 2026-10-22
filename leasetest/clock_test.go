@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faustbrian/go-lease/v2/leasetest"
+	"github.com/faustbrian/go-lease/v3/leasetest"
 )
 
 func TestClockSupportsForwardAndRollbackFaults(t *testing.T) {

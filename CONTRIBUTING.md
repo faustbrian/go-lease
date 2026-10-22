@@ -63,7 +63,7 @@ make ci
 Both Make routes use bounded local checks. Base-free checks run seeds/corpora;
 changed-source CI selects bounded active smoke for causally affected targets.
 Ordinary CI consumes the public verifier without building it from source. One
-race command selects the acquire/shutdown reservation test in `./leaseservice`,
+race command selects the acquire/shutdown reservation test in `./adapters/service`,
 once with a two-minute bound: cancellation returns typed errors, cleanup owns
 the reservation until release, and shutdown leaves no active handle or renewal.
 The deterministic backend owner/token comparison tests remain ordinary tests.

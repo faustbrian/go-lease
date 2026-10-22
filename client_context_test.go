@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
+	lease "github.com/faustbrian/go-lease/v3"
 )
 
 type countingOwnerSource struct{ calls int }

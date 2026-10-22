@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	lease "github.com/faustbrian/go-lease/v2"
+	lease "github.com/faustbrian/go-lease/v3"
 )
 
 func TestCanonicalManagerValidatesConstruction(t *testing.T) {

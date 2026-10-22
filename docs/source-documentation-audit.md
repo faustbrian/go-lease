@@ -3,6 +3,10 @@
 [Documentation map](index.md) · [Repository README](../README.md)
 [Next: API reference](api.md)
 
+This is a historical audit of the v2 source at the base below. Its
+`leasequeue`, `leasescheduler` and `leaseservice` facade rows describe paths v3
+removes.
+
 ## Scope and acceptance
 
 Base: `ff28f9913a08bd1f024486c157f099b4d3a41949` (remote main).

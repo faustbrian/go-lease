@@ -1,6 +1,25 @@
 # Changelog
 
-## Unreleased
+## 3.0.0 - 2026-10-22
+
+### Changed
+
+- Move the module to `github.com/faustbrian/go-lease/v3`.
+  `postgres.GoMigration` returns a `go-migrations/v4` migration with the same
+  version, name, SQL and checksum; adopting it from go-migrations v2 requires
+  the [ledger name upgrade](https://github.com/faustbrian/go-migrations/blob/v4.0.0/docs/operations.md#ledger-name-upgrade).
+- Bind `adapters/service` hooks to `go-service/v3` and `adapters/queue` to
+  `go-queue/v2` workers. Key derivation, schema and fencing tokens are
+  unchanged.
+
+### Removed
+
+- Remove the deprecated `leasequeue`, `leasescheduler` and `leaseservice`
+  facades. Import `adapters/queue`, `adapters/scheduler` or `adapters/service`;
+  the package names are unchanged. The removal precedes the announced 180-day
+  window because owned consumers move with this release.
+
+## Earlier unversioned notes (shipped by 2.1.0)
 
 ### Documentation
 

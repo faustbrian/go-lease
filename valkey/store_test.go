@@ -3,11 +3,12 @@ package valkey
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
+	lease "github.com/faustbrian/go-lease/v3"
 )
 
 // Captures operation/key/argument shapes and injects reply classes. It does not
@@ -28,6 +29,28 @@ func (executor *fakeExecutor) Exec(
 	executor.op = op
 	executor.keys = append([]string(nil), keys...)
 	return executor.reply, executor.err
+}
+
+// Retained Valkey lease and counter keys use this derivation; changing it would
+// restart fencing tokens at 1 beside a live owner.
+func TestStorageKeysMatchRetainedFormat(t *testing.T) {
+	t.Parallel()
+
+	store, err := newStore(&fakeExecutor{}, "lease")
+	if err != nil {
+		t.Fatalf("newStore() error = %v", err)
+	}
+	key, err := lease.NewKey("queue", "sensitive-customer")
+	if err != nil {
+		t.Fatalf("NewKey() error = %v", err)
+	}
+	want := []string{
+		"lease:{a16e2fd00f8acd9726fb4da6afd7ca9b}:lease",
+		"lease:{a16e2fd00f8acd9726fb4da6afd7ca9b}:counter",
+	}
+	if got := store.keys(key); !slices.Equal(got, want) {
+		t.Fatalf("keys() = %v, want %v", got, want)
+	}
 }
 
 func TestTryAcquireUsesRedactedSameSlotKeys(t *testing.T) {

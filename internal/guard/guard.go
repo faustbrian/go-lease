@@ -9,7 +9,7 @@ import (
 	"context"
 	"errors"
 
-	lease "github.com/faustbrian/go-lease/v2"
+	lease "github.com/faustbrian/go-lease/v3"
 )
 
 // Run acquires key, invokes callback synchronously with the token, and joins

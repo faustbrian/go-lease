@@ -23,10 +23,16 @@ An incompatible key derivation, prefix, schema, or script response must use a
 new coordinated namespace/version. Never silently split owners across formats.
 
 The canonical integration paths are `adapters/queue`, `adapters/scheduler`, and
-`adapters/service`. The v1 `leasequeue`, `leasescheduler`, and `leaseservice`
-paths remain deprecated source-compatible facades for at least 180 days and
-two stable minor releases after the canonical paths become publicly
-consumable; they are retained within the v2 module too. V1 consumers retain
-their published imports; adopting v2 requires adding `/v2` to lease imports
-and, for `postgres.GoMigration` consumers, migrating to the
-`go-migrations/v2` type.
+`adapters/service`. V3 removes the former `leasequeue`, `leasescheduler`, and
+`leaseservice` facade paths; import the matching adapter path. The adapters
+keep those package names, so only the import path changes. This removal
+precedes the 180-day window the v1.1 deprecation announced because owned
+consumers move with this release.
+
+Adopting v3 requires adding `/v3` to lease imports. `postgres.GoMigration`
+returns the `go-migrations/v4` type with the same version, name, SQL and
+checksum; runners moving from go-migrations v2 must first complete the
+[ledger name upgrade](https://github.com/faustbrian/go-migrations/blob/v4.0.0/docs/operations.md#ledger-name-upgrade). The service adapter's `Hooks` bind
+`go-service/v3`, and the queue adapter accepts `go-queue/v2` workers. Key
+derivation, schema and fencing tokens are unchanged, so v2 and v3 clients
+share one continuity epoch during a rolling upgrade.

@@ -3,26 +3,14 @@ package leasescheduler_test
 import (
 	"context"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/leasescheduler"
-	"github.com/faustbrian/go-lease/v2/leasetest"
-	"github.com/faustbrian/go-lease/v2/memory"
+	lease "github.com/faustbrian/go-lease/v3"
+	leasescheduler "github.com/faustbrian/go-lease/v3/adapters/scheduler"
+	"github.com/faustbrian/go-lease/v3/leasetest"
+	"github.com/faustbrian/go-lease/v3/memory"
 )
-
-func TestLegacyNamedTypesRetainPackageIdentity(t *testing.T) {
-	t.Parallel()
-
-	if got, want := reflect.TypeOf((*leasescheduler.Coordinator)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasescheduler"; got != want {
-		t.Fatalf("Coordinator package = %q, want %q", got, want)
-	}
-	if got, want := reflect.TypeOf((*leasescheduler.Task)(nil)).Elem().PkgPath(), "github.com/faustbrian/go-lease/v2/leasescheduler"; got != want {
-		t.Fatalf("Task package = %q, want %q", got, want)
-	}
-}
 
 func TestOnOneServerProvidesFenceAndReleases(t *testing.T) {
 	t.Parallel()
@@ -48,7 +36,7 @@ func TestOnOneServerProvidesFenceAndReleases(t *testing.T) {
 	}
 }
 
-func TestCoordinatorValidationAndOverlapAlias(t *testing.T) {
+func TestCoordinatorValidationAndOverlap(t *testing.T) {
 	t.Parallel()
 
 	policy, _ := lease.NewPolicy(lease.PolicyOptions{TTL: time.Second, MaxAttempts: 1})

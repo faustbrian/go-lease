@@ -3,7 +3,8 @@
 [Documentation map](index.md) · [Repository README](../README.md)
 [Next: API reference](api.md)
 
-`leasequeue.NewWorker` wraps a `queue/core.Worker`. Its key function should
+`adapters/queue` (package `leasequeue`) provides `NewWorker`, which wraps a
+`queue/core.Worker`. Its key function should
 derive stable job identity from bounded, non-secret fields. `Run` acquires the
 lease, cancels the child context on renewal loss, and explicitly releases after
 the handler returns.

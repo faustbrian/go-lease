@@ -22,7 +22,7 @@ operations:
   gate: local-test
   steps:
   - type: go-test
-    packages: ["./leaseservice"]
+    packages: ["./adapters/service"]
     run: '^TestAcquireRacingShutdownReleasesReservation$'
     race: true
     count: 1

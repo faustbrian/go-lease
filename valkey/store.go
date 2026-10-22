@@ -17,8 +17,8 @@ import (
 	"strings"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/internal/failure"
+	lease "github.com/faustbrian/go-lease/v3"
+	"github.com/faustbrian/go-lease/v3/internal/failure"
 )
 
 type operation uint8

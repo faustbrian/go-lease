@@ -2,13 +2,14 @@ package postgres
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"strings"
 	"testing"
 	"time"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	migrations "github.com/faustbrian/go-migrations/v2"
+	lease "github.com/faustbrian/go-lease/v3"
+	migrations "github.com/faustbrian/go-migrations/v4"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -158,6 +159,36 @@ func TestReleaseMapsAtomicOutcome(t *testing.T) {
 		if outcome != "stale" && err != nil {
 			t.Fatalf("Release(%s) error = %v", outcome, err)
 		}
+	}
+}
+
+// Deployed ledgers recorded this checksum through go-migrations v2; a changed
+// version, name, mode or SQL would fail validation of existing history.
+func TestGoMigrationChecksumMatchesPublishedV2(t *testing.T) {
+	t.Parallel()
+
+	const want = "sha256:03b0d83edb28a09d94e1ceea98b5e027e9060f693f0bf8de97ccc5c1c4976604"
+	migration, err := GoMigration()
+	if err != nil {
+		t.Fatalf("GoMigration() error = %v", err)
+	}
+	if got := migration.Checksum().String(); got != want {
+		t.Fatalf("GoMigration() checksum = %s, want %s", got, want)
+	}
+}
+
+// Retained fence rows are addressed by this digest; changing it would restart
+// fencing tokens at 1 beside a live owner.
+func TestKeyDigestMatchesRetainedFormat(t *testing.T) {
+	t.Parallel()
+
+	const want = "a16e2fd00f8acd9726fb4da6afd7ca9ba51fb235e5d402634b248efc0846a78d"
+	key, err := lease.NewKey("queue", "sensitive-customer")
+	if err != nil {
+		t.Fatalf("NewKey() error = %v", err)
+	}
+	if got := hex.EncodeToString(digest(key)); got != want {
+		t.Fatalf("digest() = %s, want %s", got, want)
 	}
 }
 

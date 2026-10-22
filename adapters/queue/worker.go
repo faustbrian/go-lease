@@ -10,9 +10,9 @@ import (
 	"context"
 	"fmt"
 
-	lease "github.com/faustbrian/go-lease/v2"
-	"github.com/faustbrian/go-lease/v2/internal/guard"
-	"github.com/faustbrian/go-queue/core"
+	lease "github.com/faustbrian/go-lease/v3"
+	"github.com/faustbrian/go-lease/v3/internal/guard"
+	"github.com/faustbrian/go-queue/v2/core"
 )
 
 type tokenContextKey struct{}
