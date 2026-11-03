@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/faustbrian/go-migrations/v4 v4.0.0
 	github.com/faustbrian/go-queue/v2 v2.0.0
-	github.com/faustbrian/go-service/v3 v3.0.0
+	github.com/faustbrian/go-service/v3 v3.4.0
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/valkey-io/valkey-go v1.0.76
 	github.com/valkey-io/valkey-go/mock v1.0.76

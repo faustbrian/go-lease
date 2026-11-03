@@ -9,8 +9,8 @@ github.com/faustbrian/go-migrations/v4 v4.0.0 h1:8F2o0DaBvKTobUM+rZZSOzVky4boP6M
 github.com/faustbrian/go-migrations/v4 v4.0.0/go.mod h1:au9tuA0oVpQ/n6c8eEYLAkLpkkEqNJLFjZq+eFfmKOE=
 github.com/faustbrian/go-queue/v2 v2.0.0 h1:39FH8kwtf9b/wQKUiUrJJpSp9Y/e8QVrNq99Y8btrDg=
 github.com/faustbrian/go-queue/v2 v2.0.0/go.mod h1:p/XYnQ8i6M0MGpA2NGA0JD4Oe9bkmIgPNV7Sye14NTY=
-github.com/faustbrian/go-service/v3 v3.0.0 h1:JdflE+3kGVsJaPYdhpG1C8SC7hJq2wki7z08+cFagAs=
-github.com/faustbrian/go-service/v3 v3.0.0/go.mod h1:haleMovKlfM07XwMpJpB/iSaOWZWDFz5tp0EIK5I51U=
+github.com/faustbrian/go-service/v3 v3.4.0 h1:mORCwRPSNthyOFvt5fwPVyOH/3b1/XewNWyDQ63GwsU=
+github.com/faustbrian/go-service/v3 v3.4.0/go.mod h1:haleMovKlfM07XwMpJpB/iSaOWZWDFz5tp0EIK5I51U=
 github.com/gofrs/uuid/v5 v5.4.0 h1:EfbpCTjqMuGyq5ZJwxqzn3Cbr2d0rUZU7v5ycAk/e/0=
 github.com/gofrs/uuid/v5 v5.4.0/go.mod h1:CDOjlDMVAtN56jqyRUZh58JT31Tiw7/oQyEXZV+9bD8=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
